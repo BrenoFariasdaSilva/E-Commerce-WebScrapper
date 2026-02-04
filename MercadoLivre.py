@@ -340,6 +340,59 @@ class MercadoLivre:
             f"  {BackgroundColors.CYAN}Description:{Style.RESET_ALL} {product_data.get('description', 'N/A')[:100]}..."
         )  # Output the extracted information
 
+    def scrape_product_info(self, verbose_output):
+        """
+        Scrapes product information from the product page by orchestrating
+        the extraction of individual data components.
+
+        :param verbose_output: Function to output verbose messages
+        :return: Dictionary containing the scraped product data
+        """
+
+        verbose_output(
+            f"{BackgroundColors.GREEN}Scraping product information from: {BackgroundColors.CYAN}{self.product_url}{Style.RESET_ALL}"
+        )  # Output the verbose message
+
+        if not self.product_url or not isinstance(self.product_url, str):  # If product URL is invalid
+            print(
+                f"{BackgroundColors.RED}Invalid product URL. Cannot scrape product information.{Style.RESET_ALL}"
+            )  # Output the error message
+            return None  # Return None on invalid URL
+
+        try:  # Try to fetch and parse the product page
+            response = self.session.get(self.product_url, timeout=10)  # Make a GET request to the product URL
+            response.raise_for_status()  # Raise an exception for bad status codes
+            
+            soup = BeautifulSoup(response.content, "html.parser")  # Parse the HTML content
+            
+            self.product_data["name"] = self.extract_product_name(soup)  # Extract product name
+            
+            current_price_int, current_price_dec = self.extract_current_price(soup)  # Extract current price
+            self.product_data["current_price_integer"] = current_price_int  # Store integer part
+            self.product_data["current_price_decimal"] = current_price_dec  # Store decimal part
+            
+            old_price_int, old_price_dec = self.extract_old_price(soup)  # Extract old price
+            self.product_data["old_price_integer"] = old_price_int  # Store integer part
+            self.product_data["old_price_decimal"] = old_price_dec  # Store decimal part
+            
+            self.product_data["discount_percentage"] = self.extract_discount_percentage(soup)  # Extract discount percentage
+            self.product_data["description"] = self.extract_product_description(soup)  # Extract product description
+            
+            self.print_product_info(self.product_data)  if VERBOSE else None  # Print the extracted product information if verbose
+            
+            return self.product_data  # Return the scraped data
+            
+        except requests.RequestException as e:  # If a request error occurred
+            print(
+                f"{BackgroundColors.RED}Error fetching product page: {e}{Style.RESET_ALL}"
+            )  # Output the error message
+            return None  # Return None on error
+        except Exception as e:  # If any other error occurred
+            print(
+                f"{BackgroundColors.RED}Unexpected error in scrape_product_info: {e}{Style.RESET_ALL}"
+            )  # Output the error message
+            return None  # Return None on error
+
 
 # Functions Definitions:
 
