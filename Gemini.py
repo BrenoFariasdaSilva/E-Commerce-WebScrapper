@@ -172,6 +172,32 @@ def verify_env_variables():
     return True  # Return True if all required environment variables are set
 
 
+def configure_model(api_key):
+    """
+    Configure the generative AI model.
+    :param api_key: The API key to configure the model.
+    :return: The configured model.
+    """
+
+    verbose_output(true_string=f"{BackgroundColors.GREEN}Configuring the Gemini Model...{Style.RESET_ALL}")
+
+    genai.configure(api_key=api_key)  # Configure the Google AI Python SDK
+
+    generation_config = {  # Generation configuration
+        "temperature": 0.1,  # Controls the randomness of the output. Values can range from [0.0, 2.0].
+        "top_p": 0.95,  # Optional. The maximum cumulative probability of tokens to consider when sampling.
+        "top_k": 64,  # Optional. The maximum number of tokens to consider when sampling.
+        "max_output_tokens": 8192,  # Set the maximum number of output tokens
+    }
+
+    model = genai.GenerativeModel(  # Create the generative model
+        model_name="gemini-1.5-flash",  # Set the model name
+        generation_config=generation_config,  # Set the generation configuration
+    )
+
+    return model  # Return the model
+
+
 def to_seconds(obj):
     """
     Converts various time-like objects to seconds.
