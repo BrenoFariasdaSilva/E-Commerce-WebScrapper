@@ -406,6 +406,16 @@ def main():
     {input_data}
     """
 
+    # Setup the task message
+    task_message = f""""
+    Please analyze the provided data.
+    """
+
+    chat_session = start_chat_session(model, context_message)  # Start the chat session
+    output = send_message(chat_session, task_message)  # Send the message
+
+    write_output_to_file(output, OUTPUT_FILE)  # Write the output to a file
+
     finish_time = datetime.datetime.now()  # Get the finish time of the program
     print(
         f"{BackgroundColors.GREEN}Start time: {BackgroundColors.CYAN}{start_time.strftime('%d/%m/%Y - %H:%M:%S')}\n{BackgroundColors.GREEN}Finish time: {BackgroundColors.CYAN}{finish_time.strftime('%d/%m/%Y - %H:%M:%S')}\n{BackgroundColors.GREEN}Execution time: {BackgroundColors.CYAN}{calculate_execution_time(start_time, finish_time)}{Style.RESET_ALL}"
