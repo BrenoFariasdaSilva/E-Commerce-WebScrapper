@@ -553,7 +553,7 @@ class MercadoLivre:
         
         image_urls = self.find_image_urls(soup)  # Find all image URLs
         
-        print(
+        verbose_output(
             f"{BackgroundColors.GREEN}Found {BackgroundColors.CYAN}{len(image_urls)}{BackgroundColors.GREEN} images in gallery.{Style.RESET_ALL}"
         )  # Output count
         
@@ -609,7 +609,7 @@ class MercadoLivre:
             with open(txt_filepath, "w", encoding="utf-8") as f:  # Write file with UTF-8 encoding
                 f.write(template_content)  # Write content
             
-            print(
+            verbose_output(
                 f"{BackgroundColors.GREEN}✓ Created product description file: {BackgroundColors.CYAN}{txt_filename}{Style.RESET_ALL}"
             )  # Output success
             
@@ -644,7 +644,7 @@ class MercadoLivre:
             product_name_safe = re.sub(r'[<>:"/\\|?*]', '_', self.product_data.get("name", "Unknown_Product"))  # Create a safe filename
             output_dir = self.create_output_directory(product_name_safe)  # Create the output directory
             
-            print(
+            verbose_output(
                 f"{BackgroundColors.GREEN}Downloading images from gallery...{Style.RESET_ALL}"
             )  # Output the step message
             
@@ -659,7 +659,7 @@ class MercadoLivre:
             if txt_file:  # If file was created successfully
                 downloaded_files.append(txt_file)  # Add to downloaded files
             
-            print(
+            verbose_output(
                 f"{BackgroundColors.GREEN}Media download complete. Total files: {BackgroundColors.CYAN}{len(downloaded_files)}{Style.RESET_ALL}"
             )  # Output completion
             
@@ -680,7 +680,7 @@ class MercadoLivre:
         """
 
         print(
-            f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Starting {BackgroundColors.CYAN}Mercado Livre{BackgroundColors.GREEN} scraping process...{Style.RESET_ALL}"
+            f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Starting {BackgroundColors.CYAN}Mercado Livre{BackgroundColors.GREEN} Scraping process...{Style.RESET_ALL}"
         )  # Output the start message
         
         self.get_product_url()  # Step 1: Get the actual product URL
@@ -890,7 +890,7 @@ def main():
     """
 
     print(
-        f"{BackgroundColors.CLEAR_TERMINAL}{BackgroundColors.BOLD}{BackgroundColors.GREEN}Welcome to the {BackgroundColors.CYAN}Mercado Livre Scraper Test{BackgroundColors.GREEN} program!{Style.RESET_ALL}",
+        f"{BackgroundColors.CLEAR_TERMINAL}{BackgroundColors.BOLD}{BackgroundColors.GREEN}Welcome to the {BackgroundColors.CYAN}Mercado Livre Scraper{BackgroundColors.GREEN} program!{Style.RESET_ALL}",
         end="\n",
     )  # Output the welcome message
     start_time = datetime.datetime.now()  # Get the start time of the program
