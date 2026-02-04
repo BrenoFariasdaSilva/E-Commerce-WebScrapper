@@ -83,7 +83,7 @@ class BackgroundColors:  # Colors for the terminal
 # Execution Constants:
 VERBOSE = False  # Set to True to output verbose messages
 
-TEST_URLs = ["https://mercadolivre.com/sec/2XY9zrA"]  # Test URLs for scraping
+TEST_URLs = [""]  # Test URLs for scraping
 
 PLATFORMS_MAP = {
     "AliExpress": "aliexpress",
