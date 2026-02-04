@@ -2,6 +2,9 @@
 *.txt
 !requirements.txt
 
+# Template Files
+main-template.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
