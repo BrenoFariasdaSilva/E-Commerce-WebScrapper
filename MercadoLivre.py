@@ -566,6 +566,61 @@ class MercadoLivre:
         
         return downloaded_images  # Return list of downloaded image files
 
+    def create_product_description_file(self, product_data, output_dir, product_name_safe, url):
+        """
+        Creates a text file with product description and details.
+        
+        :param product_data: Dictionary with product information
+        :param output_dir: Directory to save the file
+        :param product_name_safe: Safe product name for filename
+        :param url: Original product URL
+        :return: Path to the created description file or None if failed
+        """
+        
+        try:  # Try to create the .txt file
+            product_name = product_data.get("name", "Produto")  # Get product name
+            
+            description = product_data.get("description", "")  # Get description
+            if description:  # If description exists
+                description = self.clean_description(description)  # Clean description
+                description = self.to_sentence_case(description)  # Convert to sentence case
+            
+            old_price_int = product_data.get("old_price_integer", "0")  # Get old price integer
+            old_price_dec = product_data.get("old_price_decimal", "00")  # Get old price decimal
+            current_price_int = product_data.get("current_price_integer", "0")  # Get current price integer
+            current_price_dec = product_data.get("current_price_decimal", "00")  # Get current price decimal
+            discount = product_data.get("discount_percentage", "N/A")  # Get discount percentage
+            
+            old_price = f"{old_price_int},{old_price_dec}" if old_price_int != "N/A" else "N/A"  # Format old price
+            current_price = f"{current_price_int},{current_price_dec}"  # Format current price
+            
+            template_content = PRODUCT_DESCRIPTION_TEMPLATE.format(
+                product_name=product_name,
+                current_price=current_price,
+                old_price=old_price,
+                discount=discount,
+                description=description,
+                url=url
+            )  # Format the template with product data
+            
+            txt_filename = f"{product_name_safe}_description.txt"  # Create .txt filename
+            txt_filepath = os.path.join(output_dir, txt_filename)  # Create .txt file path
+            
+            with open(txt_filepath, "w", encoding="utf-8") as f:  # Write file with UTF-8 encoding
+                f.write(template_content)  # Write content
+            
+            print(
+                f"{BackgroundColors.GREEN}✓ Created product description file: {BackgroundColors.CYAN}{txt_filename}{Style.RESET_ALL}"
+            )  # Output success
+            
+            return txt_filepath  # Return the file path
+            
+        except Exception as e:  # If error creating .txt file
+            print(
+                f"{BackgroundColors.YELLOW}Warning: Could not create product description file: {e}{Style.RESET_ALL}"
+            )  # Output warning
+            return None  # Return None on failure
+
 
 # Functions Definitions:
 
