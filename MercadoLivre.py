@@ -248,6 +248,31 @@ def verify_dot_env_file():
     return True  # Return True if the .env file exists
 
 
+def output_result(result):
+    """
+    Outputs the result to the terminal.
+
+    :param result: The result to be outputted
+    :return: None
+    """
+
+    if result:  # If scraping was successful
+        verbose_output(
+            f"\n{BackgroundColors.GREEN}Scraping completed successfully!{Style.RESET_ALL}\n"
+            f"{BackgroundColors.CYAN}Results:{Style.RESET_ALL}\n"
+            f"  Name: {result.get('name', 'N/A')}\n"
+            f"  Old Price: {result.get('old_price_integer', 'N/A')}.{result.get('old_price_decimal', 'N/A')}\n"
+            f"  Current Price: {result.get('current_price_integer', 'N/A')}.{result.get('current_price_decimal', 'N/A')}\n"
+            f"  Discount: {result.get('discount_percentage', 'N/A')}\n"
+            f"  Description: {result.get('description', 'N/A')[:100]}...\n"
+            f"  Downloaded Media: {len(result.get('downloaded_media', []))} files\n"
+        )  # Output the results
+    else:  # If scraping failed
+        print(
+            f"\n{BackgroundColors.RED}Scraping failed. Please check the URL and try again.{Style.RESET_ALL}\n"
+        )  # Output the error message
+
+
 def to_seconds(obj):
     """
     Converts various time-like objects to seconds.
