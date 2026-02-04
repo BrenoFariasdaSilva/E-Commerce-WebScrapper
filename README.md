@@ -1,6 +1,6 @@
 <div align="center">
   
-# [Template-Project.](Repository-URL) <img src="Icon-Image-URL"  width="3%" height="3%">
+# [E-Commerce-WebScrapper.](Repository-URL) <img src="Icon-Image-URL"  width="3%" height="3%">
 
 </div>
 
@@ -16,16 +16,16 @@ Project-Description.
 
 <div align="center">
 
-![GitHub Code Size in Bytes](https://img.shields.io/github/languages/code-size/BrenoFariasdaSilva/Template-Project)
-![GitHub Commits](https://img.shields.io/github/commit-activity/t/BrenoFariasDaSilva/Template-Project/main)
-![GitHub Last Commit](https://img.shields.io/github/last-commit/BrenoFariasdaSilva/Template-Project)
-![GitHub Forks](https://img.shields.io/github/forks/BrenoFariasDaSilva/Template-Project)
-![GitHub Language Count](https://img.shields.io/github/languages/count/BrenoFariasDaSilva/Template-Project)
-![GitHub License](https://img.shields.io/github/license/BrenoFariasdaSilva/Template-Project)
-![GitHub Stars](https://img.shields.io/github/stars/BrenoFariasdaSilva/Template-Project)
-![GitHub Contributors](https://img.shields.io/github/contributors/BrenoFariasdaSilva/Template-Project)
-![GitHub Created At](https://img.shields.io/github/created-at/BrenoFariasdaSilva/Template-Project)
-![wakatime](https://wakatime.com/badge/github/BrenoFariasdaSilva/Template-Project.svg)
+![GitHub Code Size in Bytes](https://img.shields.io/github/languages/code-size/BrenoFariasdaSilva/E-Commerce-WebScrapper)
+![GitHub Commits](https://img.shields.io/github/commit-activity/t/BrenoFariasDaSilva/E-Commerce-WebScrapper/main)
+![GitHub Last Commit](https://img.shields.io/github/last-commit/BrenoFariasdaSilva/E-Commerce-WebScrapper)
+![GitHub Forks](https://img.shields.io/github/forks/BrenoFariasDaSilva/E-Commerce-WebScrapper)
+![GitHub Language Count](https://img.shields.io/github/languages/count/BrenoFariasDaSilva/E-Commerce-WebScrapper)
+![GitHub License](https://img.shields.io/github/license/BrenoFariasdaSilva/E-Commerce-WebScrapper)
+![GitHub Stars](https://img.shields.io/github/stars/BrenoFariasdaSilva/E-Commerce-WebScrapper)
+![GitHub Contributors](https://img.shields.io/github/contributors/BrenoFariasdaSilva/E-Commerce-WebScrapper)
+![GitHub Created At](https://img.shields.io/github/created-at/BrenoFariasdaSilva/E-Commerce-WebScrapper)
+![wakatime](https://wakatime.com/badge/github/BrenoFariasdaSilva/E-Commerce-WebScrapper.svg)
 
 </div>
 
@@ -36,7 +36,7 @@ Project-Description.
 </div>
 
 ## Table of Contents
-- [Template-Project. ](#template-project-)
+- [E-Commerce-WebScrapper. ](#e-commerce-webscrapper-)
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
   - [Requirements](#requirements)
@@ -71,8 +71,8 @@ Bullet points of the requirements.
 1. Clone the repository with the following command:
 
    ```bash
-   git clone https://github.com/BrenoFariasDaSilva/Template-Project.git
-   cd Template-Project
+   git clone https://github.com/BrenoFariasDaSilva/E-Commerce-WebScrapper.git
+   cd E-Commerce-WebScrapper
    ```
 
 ## Installation:
@@ -112,7 +112,7 @@ Bullet points of the requirements.
 
 ### Dataset - Optional
 
-1. Download the dataset from [WEBSITE-HERE]() and place it in this project directory `(/Template-Project)` and run the following command:
+1. Download the dataset from [WEBSITE-HERE]() and place it in this project directory `(/E-Commerce-WebScrapper)` and run the following command:
 
    ```bash
    make dataset
