@@ -395,6 +395,7 @@ def main():
         
     api_key = os.getenv(ENV_VARIABLES["GEMINI"])  # Get the Gemini API key from environment variables
     
+    model = configure_model(api_key)  # Configure the model
 
     finish_time = datetime.datetime.now()  # Get the finish time of the program
     print(
