@@ -219,6 +219,30 @@ def read_input_file(file_path=INPUT_FILE):
     return content  # Return the content of the file
 
 
+def start_chat_session(model, initial_user_message):
+    """
+    Start a chat session with the model.
+    :param model: The generative AI model.
+    :param initial_user_message: The initial user message.
+    :return: The chat session.
+    """
+
+    verbose_output(true_string=f"{BackgroundColors.GREEN}Starting the chat session...{Style.RESET_ALL}")
+
+    chat_session = model.start_chat(  # Start the chat session
+        history=[  # Chat history
+            {
+                "role": "user",  # The role of the message
+                "parts": [
+                    initial_user_message,  # The initial user message
+                ],  # The parts of the message
+            }
+        ]
+    )
+
+    return chat_session  # Return the chat session
+
+
 def to_seconds(obj):
     """
     Converts various time-like objects to seconds.
