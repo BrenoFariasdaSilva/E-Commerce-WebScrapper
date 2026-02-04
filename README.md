@@ -102,9 +102,9 @@ Bullet points of the requirements.
 
 1. Install the project dependencies with the following command:
 
-   ```bash
-   make dependencies
-   ```
+    ```bash
+    make dependencies
+    ```
 
 ## Usage
 
