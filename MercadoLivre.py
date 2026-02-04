@@ -306,6 +306,19 @@ class MercadoLivre:
         
         return discount_percentage  # Return the discount percentage
 
+    def extract_product_description(self, soup):
+        """
+        Extracts the product description from the parsed HTML soup.
+        
+        :param soup: BeautifulSoup object containing the parsed HTML
+        :return: Product description string or "No description available" if not found
+        """
+        
+        description_element = soup.find(class_="ui-pdp-description__content")  # Find description title element
+        description = description_element.get_text(strip=True) if description_element else "No description available"  # Extract description
+        
+        return description  # Return the description
+
 
 # Functions Definitions:
 
