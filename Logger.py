@@ -76,7 +76,7 @@ class Logger:
 
         mode = "w" if clean else "a"  # Choose file mode based on 'clean' flag
         self.logfile = open(logfile_path, mode, encoding="utf-8")  # Open log file
-        self.is_tty = sys.stdout.isatty()  # Verify if stdout is a TTY
+        self.is_tty = sys.__stdout__ is not None and sys.__stdout__.isatty()  # Verify if stdout is a TTY
 
     def write(self, message):
         """
