@@ -172,103 +172,121 @@ def verify_env_variables():
     return True  # Return True if all required environment variables are set
 
 
-def configure_model(api_key):
+class Gemini:
     """
-    Configure the generative AI model.
-    :param api_key: The API key to configure the model.
-    :return: The configured model.
+    Class for interacting with Google's Gemini AI model.
+    
+    This class provides methods to configure the model, read input files,
+    start chat sessions, send messages, and write outputs.
     """
+    
+    def __init__(self, api_key):
+        """
+        Initialize the Gemini class with an API key.
+        
+        :param api_key: The API key for Google's Gemini AI.
+        """
+        
+        self.api_key = api_key  # Store the API key
+        self.model = self.configure_model(api_key)  # Configure the model
 
-    verbose_output(true_string=f"{BackgroundColors.GREEN}Configuring the Gemini Model...{Style.RESET_ALL}")
-
-    genai.configure(api_key=api_key)  # Configure the Google AI Python SDK
-
-    generation_config = {  # Generation configuration
-        "temperature": 0.1,  # Controls the randomness of the output. Values can range from [0.0, 2.0].
-        "top_p": 0.95,  # Optional. The maximum cumulative probability of tokens to consider when sampling.
-        "top_k": 64,  # Optional. The maximum number of tokens to consider when sampling.
-        "max_output_tokens": 8192,  # Set the maximum number of output tokens
-    }
-
-    model = genai.GenerativeModel(  # Create the generative model
-        model_name="gemini-1.5-flash",  # Set the model name
-        generation_config=generation_config,  # Set the generation configuration
-    )
-
-    return model  # Return the model
-
-
-def read_input_file(file_path=INPUT_FILE):
-    """
-    Reads the input file.
-    :param file_path: The path to the input file.
-    :return: The content of the file.
-    """
-
-    verbose_output(true_string=f"{BackgroundColors.GREEN}Reading the input file...{Style.RESET_ALL}")
-
-    if not os.path.exists(file_path):  # If the input file does not exist
-        print(
-            f"{BackgroundColors.RED}Input file {BackgroundColors.CYAN}{file_path}{BackgroundColors.RED} not found.{Style.RESET_ALL}"
+    def configure_model(self, api_key):
+        """
+        Configure the generative AI model.
+        
+        :param api_key: The API key to configure the model.
+        :return: The configured model.
+        """
+        
+        verbose_output(true_string=f"{BackgroundColors.GREEN}Configuring the Gemini Model...{Style.RESET_ALL}")
+        
+        genai.configure(api_key=api_key)  # Configure the Google AI Python SDK
+        
+        generation_config = {  # Generation configuration
+            "temperature": 0.1,  # Controls the randomness of the output. Values can range from [0.0, 2.0].
+            "top_p": 0.95,  # Optional. The maximum cumulative probability of tokens to consider when sampling.
+            "top_k": 64,  # Optional. The maximum number of tokens to consider when sampling.
+            "max_output_tokens": 8192,  # Set the maximum number of output tokens
+        }
+        
+        model = genai.GenerativeModel(  # Create the generative model
+            model_name="gemini-1.5-flash",  # Set the model name
+            generation_config=generation_config,  # Set the generation configuration
         )
-        sys.exit(1)  # Exit the program
+        
+        return model  # Return the model
 
-    with open(file_path, "r") as file:  # Open the input file
-        content = file.read()  # Read the content of the file
+    def read_input_file(self, file_path=INPUT_FILE):
+        """
+        Reads the input file.
+        
+        :param file_path: The path to the input file.
+        :return: The content of the file.
+        """
+        
+        verbose_output(true_string=f"{BackgroundColors.GREEN}Reading the input file...{Style.RESET_ALL}")
+        
+        if not os.path.exists(file_path):  # If the input file does not exist
+            print(
+                f"{BackgroundColors.RED}Input file {BackgroundColors.CYAN}{file_path}{BackgroundColors.RED} not found.{Style.RESET_ALL}"
+            )
+            sys.exit(1)  # Exit the program
+        
+        with open(file_path, "r") as file:  # Open the input file
+            content = file.read()  # Read the content of the file
+        
+        return content  # Return the content of the file
 
-    return content  # Return the content of the file
+    def start_chat_session(self, initial_user_message):
+        """
+        Start a chat session with the model.
+        
+        :param initial_user_message: The initial user message.
+        :return: The chat session.
+        """
+        
+        verbose_output(true_string=f"{BackgroundColors.GREEN}Starting the chat session...{Style.RESET_ALL}")
+        
+        chat_session = self.model.start_chat(  # Start the chat session
+            history=[  # Chat history
+                {
+                    "role": "user",  # The role of the message
+                    "parts": [
+                        initial_user_message,  # The initial user message
+                    ],  # The parts of the message
+                }
+            ]
+        )
+        
+        return chat_session  # Return the chat session
 
+    def send_message(self, chat_session, user_message):
+        """
+        Send a message in the chat session and get the output.
+        
+        :param chat_session: The chat session.
+        :param user_message: The user message to send.
+        :return: The output.
+        """
+        
+        verbose_output(true_string=f"{BackgroundColors.GREEN}Sending the message...{Style.RESET_ALL}")
+        
+        output = chat_session.send_message(user_message)  # Send the message
+        return output.text  # Return the output
 
-def start_chat_session(model, initial_user_message):
-    """
-    Start a chat session with the model.
-    :param model: The generative AI model.
-    :param initial_user_message: The initial user message.
-    :return: The chat session.
-    """
-
-    verbose_output(true_string=f"{BackgroundColors.GREEN}Starting the chat session...{Style.RESET_ALL}")
-
-    chat_session = model.start_chat(  # Start the chat session
-        history=[  # Chat history
-            {
-                "role": "user",  # The role of the message
-                "parts": [
-                    initial_user_message,  # The initial user message
-                ],  # The parts of the message
-            }
-        ]
-    )
-
-    return chat_session  # Return the chat session
-
-
-def send_message(chat_session, user_message):
-    """
-    Send a message in the chat session and get the output.
-    :param chat_session: The chat session.
-    :param user_message: The user message to send.
-    :return: The output.
-    """
-
-    verbose_output(true_string=f"{BackgroundColors.GREEN}Sending the message...{Style.RESET_ALL}")
-
-    output = chat_session.send_message(user_message)  # Send the message
-    return output.text  # Return the output
-
-
-def write_output_to_file(output, file_path=OUTPUT_FILE):
-    """
-    Writes the chat output to a specified file.
-    :param output: The output to write.
-    :param file_path: The path to the file.
-    :return: None
-    """
-
-    verbose_output(true_string=f"{BackgroundColors.GREEN}Writing the output to the file...{Style.RESET_ALL}")
-
-    with open(file_path, "w") as file:  # Open the file for writing
-        file.write(output)  # Write the output to the file
+    def write_output_to_file(self, output, file_path=OUTPUT_FILE):
+        """
+        Writes the chat output to a specified file.
+        
+        :param output: The output to write.
+        :param file_path: The path to the file.
+        :return: None
+        """
+        
+        verbose_output(true_string=f"{BackgroundColors.GREEN}Writing the output to the file...{Style.RESET_ALL}")
+        
+        with open(file_path, "w") as file:  # Open the file for writing
+            file.write(output)  # Write the output to the file
 
 
 def to_seconds(obj):
@@ -395,9 +413,9 @@ def main():
         
     api_key = os.getenv(ENV_VARIABLES["GEMINI"])  # Get the Gemini API key from environment variables
     
-    model = configure_model(api_key)  # Configure the model
+    gemini = Gemini(api_key)  # Create Gemini instance
 
-    input_data = read_input_file(INPUT_FILE)  # Read the input file
+    input_data = gemini.read_input_file(INPUT_FILE)  # Read the input file
 
     #  Setup the context message
     context_message = f"""
@@ -411,10 +429,10 @@ def main():
     Please analyze the provided data.
     """
 
-    chat_session = start_chat_session(model, context_message)  # Start the chat session
-    output = send_message(chat_session, task_message)  # Send the message
+    chat_session = gemini.start_chat_session(context_message)  # Start the chat session
+    output = gemini.send_message(chat_session, task_message)  # Send the message
 
-    write_output_to_file(output, OUTPUT_FILE)  # Write the output to a file
+    gemini.write_output_to_file(output, OUTPUT_FILE)  # Write the output to a file
 
     finish_time = datetime.datetime.now()  # Get the finish time of the program
     print(
