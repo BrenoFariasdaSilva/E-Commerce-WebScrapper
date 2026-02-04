@@ -184,7 +184,7 @@ class MercadoLivre:
                     href = first_link.get("href")  # Get the href attribute
                     if href and isinstance(href, str):  # If href exists and is a string
                         self.product_url = href  # Store the product URL
-                        print(
+                        verbose_output(
                             f"{BackgroundColors.GREEN}Product URL found (alternative method): {BackgroundColors.CYAN}{self.product_url}{Style.RESET_ALL}"
                         )  # Output the success message
                         return self.product_url  # Return the product URL
@@ -651,7 +651,7 @@ class MercadoLivre:
             downloaded_images = self.download_product_images(self.session, self.product_url, output_dir)  # Download images
             downloaded_files.extend(downloaded_images)  # Add images to downloaded files
             
-            print(
+            verbose_output(
                 f"{BackgroundColors.GREEN}Creating product description file...{Style.RESET_ALL}"
             )  # Output message
             
@@ -671,16 +671,16 @@ class MercadoLivre:
             )  # Output error
             return downloaded_files  # Return whatever was downloaded
         
-    def scrape(self, verbose_output):
+    def scrape(self, verbose=VERBOSE):
         """
         Main scraping method that orchestrates the entire scraping process.
 
-        :param verbose_output: Function to output verbose messages
+        :param verbose: Boolean flag to enable verbose output
         :return: Dictionary containing all scraped data and downloaded file paths
         """
 
         print(
-            f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Starting Mercado Livre scraping process...{Style.RESET_ALL}"
+            f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Starting {BackgroundColors.CYAN}Mercado Livre{BackgroundColors.GREEN} scraping process...{Style.RESET_ALL}"
         )  # Output the start message
         
         self.get_product_url()  # Step 1: Get the actual product URL
@@ -891,7 +891,7 @@ def main():
 
     print(
         f"{BackgroundColors.CLEAR_TERMINAL}{BackgroundColors.BOLD}{BackgroundColors.GREEN}Welcome to the {BackgroundColors.CYAN}Mercado Livre Scraper Test{BackgroundColors.GREEN} program!{Style.RESET_ALL}",
-        end="\n\n",
+        end="\n",
     )  # Output the welcome message
     start_time = datetime.datetime.now()  # Get the start time of the program
 
@@ -915,7 +915,7 @@ def main():
         f"{BackgroundColors.GREEN}Start time: {BackgroundColors.CYAN}{start_time.strftime('%d/%m/%Y - %H:%M:%S')}\n{BackgroundColors.GREEN}Finish time: {BackgroundColors.CYAN}{finish_time.strftime('%d/%m/%Y - %H:%M:%S')}\n{BackgroundColors.GREEN}Execution time: {BackgroundColors.CYAN}{calculate_execution_time(start_time, finish_time)}{Style.RESET_ALL}"
     )  # Output the start and finish times
     print(
-        f"\n{BackgroundColors.BOLD}{BackgroundColors.GREEN}Program finished.{Style.RESET_ALL}"
+        f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Program finished.{Style.RESET_ALL}"
     )  # Output the end of the program message
     
     (
