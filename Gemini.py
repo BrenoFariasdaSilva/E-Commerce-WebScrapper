@@ -198,6 +198,27 @@ def configure_model(api_key):
     return model  # Return the model
 
 
+def read_input_file(file_path=INPUT_FILE):
+    """
+    Reads the input file.
+    :param file_path: The path to the input file.
+    :return: The content of the file.
+    """
+
+    verbose_output(true_string=f"{BackgroundColors.GREEN}Reading the input file...{Style.RESET_ALL}")
+
+    if not os.path.exists(file_path):  # If the input file does not exist
+        print(
+            f"{BackgroundColors.RED}Input file {BackgroundColors.CYAN}{file_path}{BackgroundColors.RED} not found.{Style.RESET_ALL}"
+        )
+        sys.exit(1)  # Exit the program
+
+    with open(file_path, "r") as file:  # Open the input file
+        content = file.read()  # Read the content of the file
+
+    return content  # Return the content of the file
+
+
 def to_seconds(obj):
     """
     Converts various time-like objects to seconds.
