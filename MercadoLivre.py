@@ -319,6 +319,27 @@ class MercadoLivre:
         
         return description  # Return the description
 
+    def print_product_info(self, product_data):
+        """
+        Prints the extracted product information in a formatted manner.
+        
+        :param product_data: Dictionary containing the scraped product data
+        :return: None
+        """
+        
+        if not product_data:  # If no product data
+            print(f"{BackgroundColors.RED}No product data to display.{Style.RESET_ALL}")  # Output the error message
+            return  # Return early
+        
+        print(
+            f"{BackgroundColors.GREEN}Product information extracted successfully:{Style.RESET_ALL}\n"
+            f"  {BackgroundColors.CYAN}Name:{Style.RESET_ALL} {product_data.get('name', 'N/A')}\n"
+            f"  {BackgroundColors.CYAN}Old Price:{Style.RESET_ALL} R${product_data.get('old_price_integer', 'N/A')},{product_data.get('old_price_decimal', 'N/A') if product_data.get('old_price_integer', 'N/A') != 'N/A' else 'N/A'}\n"
+            f"  {BackgroundColors.CYAN}Current Price:{Style.RESET_ALL} R${product_data.get('current_price_integer', 'N/A')},{product_data.get('current_price_decimal', 'N/A')}\n"
+            f"  {BackgroundColors.CYAN}Discount:{Style.RESET_ALL} {product_data.get('discount_percentage', 'N/A')}\n"
+            f"  {BackgroundColors.CYAN}Description:{Style.RESET_ALL} {product_data.get('description', 'N/A')[:100]}..."
+        )  # Output the extracted information
+
 
 # Functions Definitions:
 
