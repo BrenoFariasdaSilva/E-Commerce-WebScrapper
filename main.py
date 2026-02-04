@@ -165,7 +165,7 @@ def verify_env_variables():
 
     for ref_name, env_var in ENV_VARIABLES.items():  # ENV_VARIABLES = {"REFERENCE_NAME": "ENV_VAR_NAME"}
         if os.getenv(env_var) is None:  # If the environment variable is not set
-            missing_variables.append(f"{ref_name} ({env_var})")
+            missing_variables.append(f"{ref_name} ({env_var})")  # Add the missing variable to the list
 
     if missing_variables:  # If there are any missing variables
         print(
