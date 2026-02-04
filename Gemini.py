@@ -399,6 +399,13 @@ def main():
 
     input_data = read_input_file(INPUT_FILE)  # Read the input file
 
+    #  Setup the context message
+    context_message = f"""
+    Hi, Gemini.
+    
+    {input_data}
+    """
+
     finish_time = datetime.datetime.now()  # Get the finish time of the program
     print(
         f"{BackgroundColors.GREEN}Start time: {BackgroundColors.CYAN}{start_time.strftime('%d/%m/%Y - %H:%M:%S')}\n{BackgroundColors.GREEN}Finish time: {BackgroundColors.CYAN}{finish_time.strftime('%d/%m/%Y - %H:%M:%S')}\n{BackgroundColors.GREEN}Execution time: {BackgroundColors.CYAN}{calculate_execution_time(start_time, finish_time)}{Style.RESET_ALL}"
