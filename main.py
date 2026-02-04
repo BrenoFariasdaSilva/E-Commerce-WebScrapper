@@ -255,6 +255,56 @@ def detect_platform(url):
     return None  # Return None if platform not recognized
 
 
+def scrape_product(url):
+    """
+    Scrapes product information from a URL by detecting the platform and using the appropriate scraper.
+    
+    :param url: The product URL to scrape
+    :return: Tuple of (product_data dict, description_file path, product_name_safe string) or (None, None, None) on failure
+    """
+    
+    platform = detect_platform(url)  # Detect the e-commerce platform
+    
+    if not platform:  # If platform detection failed
+        print(f"{BackgroundColors.RED}Unsupported platform. Skipping URL: {url}{Style.RESET_ALL}")
+        return None, None, None
+    
+    scraper_classes = {  # Mapping of platform identifiers to scraper classes
+        # "aliexpress": AliExpress,
+        "mercadolivre": MercadoLivre,
+        # "shein": Shein,
+        # "shopee": Shopee,
+    }
+    
+    scraper_class = scraper_classes.get(platform)  # Get the appropriate scraper class
+    
+    if not scraper_class:  # If scraper class not found
+        print(f"{BackgroundColors.RED}Scraper not implemented for platform: {platform}{Style.RESET_ALL}")
+        return None, None, None  # Return None values
+    
+    try:  # Try to scrape the product
+        scraper = scraper_class(url)  # Create scraper instance
+        product_data = scraper.scrape()  # Scrape the product
+        
+        if not product_data:  # If scraping failed
+            print(f"{BackgroundColors.RED}Failed to scrape product from: {url}{Style.RESET_ALL}")
+            return None, None, None  # Return None values
+        
+        product_name = product_data.get("name", "Unknown Product")  # Get product name
+        product_name_safe = sanitize_filename(product_name)  # Sanitize filename
+        description_file = f"./Outputs/{product_name_safe}/{product_name_safe}_description.txt"
+        
+        if not verify_filepath_exists(description_file):  # If description file not found
+            print(f"{BackgroundColors.RED}Description file not found: {description_file}{Style.RESET_ALL}")
+            return None, None, None  # Return None values
+        
+        return product_data, description_file, product_name_safe  # Return scraped data and file paths
+        
+    except Exception as e:  # If an error occurs during scraping
+        print(f"{BackgroundColors.RED}Error during scraping: {e}{Style.RESET_ALL}")  # Print error message
+        return None, None, None  # Return None values
+
+
 def to_seconds(obj):
     """
     Converts various time-like objects to seconds.
