@@ -81,6 +81,9 @@ class BackgroundColors:  # Colors for the terminal
 # Execution Constants:
 VERBOSE = False  # Set to True to output verbose messages
 
+# Output Directory Constants:
+OUTPUT_DIRECTORY = "./Outputs/"  # The base path to the output directory
+
 # Logger Setup:
 logger = Logger(f"./Logs/{Path(__file__).stem}.log", clean=True)  # Create a Logger instance
 sys.stdout = logger  # Redirect stdout to the logger
