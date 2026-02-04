@@ -106,21 +106,6 @@ def verbose_output(true_string="", false_string=""):
         print(false_string)  # Output the false statement string
 
 
-def verify_dot_env_file():
-    """
-    Verifies if the .env file exists in the current directory.
-
-    :return: True if the .env file exists, False otherwise
-    """
-
-    env_path = Path(__file__).parent / ".env"  # Path to the .env file
-    if not env_path.exists():  # If the .env file does not exist
-        print(f"{BackgroundColors.CYAN}.env{BackgroundColors.YELLOW} file not found at {BackgroundColors.CYAN}{env_path}{BackgroundColors.YELLOW}. Telegram messages may not be sent.{Style.RESET_ALL}")
-        return False  # Return False
-
-    return True  # Return True if the .env file exists
-
-
 def verify_filepath_exists(filepath):
     """
     Verify if a file or folder exists at the specified path.
@@ -134,6 +119,22 @@ def verify_filepath_exists(filepath):
     )  # Output the verbose message
 
     return os.path.exists(filepath)  # Return True if the file or folder exists, False otherwise
+
+
+def verify_dot_env_file():
+    """
+    Verifies if the .env file exists in the current directory.
+
+    :return: True if the .env file exists, False otherwise
+    """
+
+    env_path = Path(__file__).parent / ".env"  # Path to the .env file
+    
+    if not verify_filepath_exists(env_path):  # If the .env file does not exist
+        print(f"{BackgroundColors.CYAN}.env{BackgroundColors.YELLOW} file not found at {BackgroundColors.CYAN}{env_path}{BackgroundColors.YELLOW}. Telegram messages may not be sent.{Style.RESET_ALL}")
+        return False  # Return False
+
+    return True  # Return True if the .env file exists
 
 
 def calculate_execution_time(start_time, finish_time=None):
