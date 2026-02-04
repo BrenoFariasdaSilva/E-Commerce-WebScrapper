@@ -388,7 +388,13 @@ def main():
     )  # Output the welcome message
     start_time = datetime.datetime.now()  # Get the start time of the program
     
-    verify_dot_env_file()  # Verify if the .env file exists
+    if not verify_dot_env_file() or not verify_env_variables():  # If the .env file does not exist or required environment variables are missing
+        sys.exit(1)  # Exit the program
+        
+    load_dotenv(ENV_PATH)  # Load the .env file
+        
+    api_key = os.getenv(ENV_VARIABLES["GEMINI"])  # Get the Gemini API key from environment variables
+    
 
     finish_time = datetime.datetime.now()  # Get the finish time of the program
     print(
