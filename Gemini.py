@@ -257,6 +257,20 @@ def send_message(chat_session, user_message):
     return output.text  # Return the output
 
 
+def write_output_to_file(output, file_path=OUTPUT_FILE):
+    """
+    Writes the chat output to a specified file.
+    :param output: The output to write.
+    :param file_path: The path to the file.
+    :return: None
+    """
+
+    verbose_output(true_string=f"{BackgroundColors.GREEN}Writing the output to the file...{Style.RESET_ALL}")
+
+    with open(file_path, "w") as file:  # Open the file for writing
+        file.write(output)  # Write the output to the file
+
+
 def to_seconds(obj):
     """
     Converts various time-like objects to seconds.
