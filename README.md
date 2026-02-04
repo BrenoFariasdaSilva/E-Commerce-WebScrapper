@@ -46,7 +46,7 @@ Project-Description.
   - [Run Programing Language Code:](#run-programing-language-code)
     - [Dependencies](#dependencies)
   - [Usage](#usage)
-  - [Results - Optional](#results---optional)
+  - [Results](#results)
   - [Contributing](#contributing)
   - [Collaborators](#collaborators)
   - [License](#license)
@@ -114,7 +114,7 @@ In order to run the project, run the following command:
 make run
 ```
 
-## Results - Optional
+## Results
 
 Discuss the results obtained in the project.
 
