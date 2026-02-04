@@ -225,6 +225,38 @@ class MercadoLivre:
         
         return product_name  # Return the product name
 
+    def extract_current_price(self, soup):
+        """
+        Extracts the current price from the parsed HTML soup.
+        
+        :param soup: BeautifulSoup object containing the parsed HTML
+        :return: Tuple of (integer_part, decimal_part) for current price
+        """
+        
+        current_price_container = soup.find("span", class_=re.compile(r"andes-money-amount.*andes-money-amount--superscript-36"))  # Find the current price with superscript-36 cents
+        if current_price_container and isinstance(current_price_container, Tag):  # If found
+            current_fraction = current_price_container.find(class_="andes-money-amount__fraction")  # Find the fraction within this container
+            current_cents = current_price_container.find(class_="andes-money-amount__cents")  # Find the cents within this container
+            
+            integer_part = current_fraction.get_text(strip=True) if current_fraction and isinstance(current_fraction, Tag) else "0"  # Extract integer part
+            decimal_part = current_cents.get_text(strip=True) if current_cents and isinstance(current_cents, Tag) else "00"  # Extract decimal part
+        else:  # If not found
+            cents_element = soup.find(class_="andes-money-amount__cents--superscript-36")  # Find the cents with superscript-36
+            if cents_element and isinstance(cents_element, Tag):  # If found
+                parent = cents_element.find_parent(class_=re.compile(r"andes-money-amount"))  # Find the parent container
+                if parent and isinstance(parent, Tag):  # If parent found
+                    fraction = parent.find(class_="andes-money-amount__fraction")  # Find the fraction within this container
+                    integer_part = fraction.get_text(strip=True) if fraction and isinstance(fraction, Tag) else "0"  # Extract integer part
+                    decimal_part = cents_element.get_text(strip=True)  # Extract decimal part
+                else:  # If parent not found
+                    integer_part = "0"  # Default integer part
+                    decimal_part = "00"  # Default decimal part
+            else:  # If no superscript-36 cents found
+                integer_part = "0"  # Default integer part
+                decimal_part = "00"  # Default decimal part
+        
+        return integer_part, decimal_part  # Return the price parts
+
 
 # Functions Definitions:
 
