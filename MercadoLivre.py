@@ -445,6 +445,19 @@ class MercadoLivre:
         
         return "".join(result)  # Join and return
 
+    def create_output_directory(self, product_name_safe):
+        """
+        Creates the output directory for storing downloaded media files.
+        
+        :param product_name_safe: Safe product name for directory naming
+        :return: Path to the created output directory
+        """
+        
+        output_dir = os.path.join(OUTPUT_DIRECTORY, product_name_safe)  # Create the output directory path
+        create_directory(os.path.abspath(output_dir), output_dir.replace(".", ""))  # Create the output directory
+        
+        return output_dir  # Return the output directory path
+
 
 # Functions Definitions:
 
