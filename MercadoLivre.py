@@ -421,6 +421,30 @@ class MercadoLivre:
         
         return text.strip()  # Return cleaned text
 
+    def to_sentence_case(self, text):
+        """
+        Converts text to sentence case (first letter of each sentence uppercase).
+        
+        :param text: The text to convert
+        :return: Text in sentence case
+        """
+        
+        if not text:  # If text is empty
+            return text  # Return as is
+        
+        sentences = re.split(r"([.!?]\s*)", text)  # Keep the delimiters
+        
+        result = []  # List to store processed sentences
+        for i, sentence in enumerate(sentences):  # Iterate through sentences
+            if sentence.strip():  # If sentence is not empty
+                if i % 2 == 0:  # Even indices are the actual sentence content
+                    sentence = sentence.strip()  # Strip leading/trailing whitespace
+                    if sentence:  # If still not empty
+                        sentence = sentence[0].upper() + sentence[1:].lower()  # Capitalize first letter
+                result.append(sentence)  # Add to result
+        
+        return "".join(result)  # Join and return
+
 
 # Functions Definitions:
 
