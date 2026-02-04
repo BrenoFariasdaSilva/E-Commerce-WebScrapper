@@ -1,49 +1,56 @@
 """
 ================================================================================
-<PROJECT OR SCRIPT TITLE>
+E-Commerce WebScraper
 ================================================================================
 Author      : Breno Farias da Silva
-Created     : <YYYY-MM-DD>
+Created     : <2026-03-04>
 Description :
-    <Provide a concise and complete overview of what this script does.>
-    <Mention its purpose, scope, and relevance to the larger project.>
+    This script is an E-Commerce WebScraper designed to scrape product information
+    from popular e-commerce websites such as AliExpress, Mercado Livre, Shein, and Shopee.
+    It automates the process of collecting data like product names, prices, descriptions,
+    and other relevant details for analysis or monitoring purposes.
 
     Key features include:
-        - <Feature 1 — e.g., automatic data loading and preprocessing>
-        - <Feature 2 — e.g., model training and evaluation>
-        - <Feature 3 — e.g., visualization or report generation>
-        - <Feature 4 — e.g., logging or notification system>
-        - <Feature 5 — e.g., integration with other modules or datasets>
+        - Web scraping from multiple e-commerce platforms
+        - Data extraction and preprocessing
+        - Configurable input for URLs or search terms
+        - Output to structured files (e.g., CSV, JSON)
+        - Logging and error handling for robust operation
+        - Integration with AI tools for data analysis (e.g., Gemini)
 
 Usage:
-    1. <Explain any configuration steps before running, such as editing variables or paths.>
-    2. <Describe how to execute the script — typically via Makefile or Python.>
-            $ make <target>   or   $ python <script_name>.py
-    3. <List what outputs are expected or where results are saved.>
+    1. Configure the .env file with necessary API keys (e.g., GEMINI_API_KEY).
+    2. Prepare input files with URLs or search terms in the ./Inputs/ directory.
+    3. Run the script via Makefile or Python:
+            $ make run   or   $ python main.py
+    4. Check outputs in the ./Outputs/ directory for scraped data.
 
 Outputs:
-    - <Output file or directory 1 — e.g., results.csv>
-    - <Output file or directory 2 — e.g., Feature_Analysis/plots/>
-    - <Output file or directory 3 — e.g., logs/output.txt>
+    - Scraped data files (e.g., products.csv, output.txt)
+    - Logs in ./Logs/ for execution details
+    - Optional AI analysis results
 
 TODOs:
-    - <Add a task or improvement — e.g., implement CLI argument parsing.>
-    - <Add another improvement — e.g., extend support to Parquet files.>
-    - <Add optimization — e.g., parallelize evaluation loop.>
-    - <Add robustness — e.g., error handling or data validation.>
+    - Implement scraping for additional websites
+    - Add proxy support for rate limiting
+    - Enhance data validation and cleaning
+    - Integrate with databases for data storage
+    - Add CLI argument parsing for flexibility
 
 Dependencies:
-    - Python >= <version>
-    - <Library 1 — e.g., pandas>
-    - <Library 2 — e.g., numpy>
-    - <Library 3 — e.g., scikit-learn>
-    - <Library 4 — e.g., matplotlib, seaborn, tqdm, colorama>
+    - Python >= 3.8
+    - requests, beautifulsoup4 for web scraping
+    - pandas for data handling
+    - colorama for terminal coloring
+    - python-dotenv for environment variables
+    - google-generativeai for AI integration
 
 Assumptions & Notes:
-    - <List any key assumptions — e.g., last column is the target variable.>
-    - <Mention data format — e.g., CSV files only.>
-    - <Mention platform or OS-specific notes — e.g., sound disabled on Windows.>
-    - <Note on output structure or reusability.>
+    - Websites' structures may change; updates may be needed for scraping logic
+    - Respect robots.txt and terms of service for ethical scraping
+    - API keys are required for AI features
+    - Sound notifications are disabled on Windows
+    - Outputs are reusable for further analysis
 """
 
 import atexit  # For playing a sound when the program finishes
