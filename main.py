@@ -156,7 +156,7 @@ def verify_dot_env_file():
     env_path = Path(__file__).parent / ".env"  # Path to the .env file
     
     if not verify_filepath_exists(env_path):  # If the .env file does not exist
-        print(f"{BackgroundColors.CYAN}.env{BackgroundColors.YELLOW} file not found at {BackgroundColors.CYAN}{env_path}{BackgroundColors.YELLOW}. Telegram messages may not be sent.{Style.RESET_ALL}")
+        print(f"{BackgroundColors.CYAN}.env{BackgroundColors.YELLOW} file not found at {BackgroundColors.CYAN}{env_path}{BackgroundColors.YELLOW}.{Style.RESET_ALL}")
         return False  # Return False
 
     return True  # Return True if the .env file exists
