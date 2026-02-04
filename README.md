@@ -1,6 +1,6 @@
 <div align="center">
   
-# [E-Commerce-WebScrapper.](https://github.com/BrenoFariasdaSilva/E-Commerce-WebScrapper) <img src="https://github.com/BrenoFariasdaSilva/E-Commerce-WebScrapper/blob/main/.assets/Icons/web-scraper.png"  width="4%" height="4%">
+# [E-Commerces-WebScraper.](https://github.com/BrenoFariasdaSilva/E-Commerces-WebScraper) <img src="https://github.com/BrenoFariasdaSilva/E-Commerces-WebScraper/blob/main/.assets/Icons/web-scraper.png"  width="4%" height="4%">
 
 </div>
 
@@ -16,16 +16,16 @@ Project-Description.
 
 <div align="center">
 
-![GitHub Code Size in Bytes](https://img.shields.io/github/languages/code-size/BrenoFariasdaSilva/E-Commerce-WebScrapper)
-![GitHub Commits](https://img.shields.io/github/commit-activity/t/BrenoFariasDaSilva/E-Commerce-WebScrapper/main)
-![GitHub Last Commit](https://img.shields.io/github/last-commit/BrenoFariasdaSilva/E-Commerce-WebScrapper)
-![GitHub Forks](https://img.shields.io/github/forks/BrenoFariasDaSilva/E-Commerce-WebScrapper)
-![GitHub Language Count](https://img.shields.io/github/languages/count/BrenoFariasDaSilva/E-Commerce-WebScrapper)
-![GitHub License](https://img.shields.io/github/license/BrenoFariasdaSilva/E-Commerce-WebScrapper)
-![GitHub Stars](https://img.shields.io/github/stars/BrenoFariasdaSilva/E-Commerce-WebScrapper)
-![GitHub Contributors](https://img.shields.io/github/contributors/BrenoFariasdaSilva/E-Commerce-WebScrapper)
-![GitHub Created At](https://img.shields.io/github/created-at/BrenoFariasdaSilva/E-Commerce-WebScrapper)
-![wakatime](https://wakatime.com/badge/github/BrenoFariasdaSilva/E-Commerce-WebScrapper.svg)
+![GitHub Code Size in Bytes](https://img.shields.io/github/languages/code-size/BrenoFariasdaSilva/E-Commerces-WebScraper)
+![GitHub Commits](https://img.shields.io/github/commit-activity/t/BrenoFariasDaSilva/E-Commerces-WebScraper/main)
+![GitHub Last Commit](https://img.shields.io/github/last-commit/BrenoFariasdaSilva/E-Commerces-WebScraper)
+![GitHub Forks](https://img.shields.io/github/forks/BrenoFariasDaSilva/E-Commerces-WebScraper)
+![GitHub Language Count](https://img.shields.io/github/languages/count/BrenoFariasDaSilva/E-Commerces-WebScraper)
+![GitHub License](https://img.shields.io/github/license/BrenoFariasdaSilva/E-Commerces-WebScraper)
+![GitHub Stars](https://img.shields.io/github/stars/BrenoFariasdaSilva/E-Commerces-WebScraper)
+![GitHub Contributors](https://img.shields.io/github/contributors/BrenoFariasdaSilva/E-Commerces-WebScraper)
+![GitHub Created At](https://img.shields.io/github/created-at/BrenoFariasdaSilva/E-Commerces-WebScraper)
+![wakatime](https://wakatime.com/badge/github/BrenoFariasdaSilva/E-Commerces-WebScraper.svg)
 
 </div>
 
@@ -36,7 +36,7 @@ Project-Description.
 </div>
 
 ## Table of Contents
-- [E-Commerce-WebScrapper. ](#e-commerce-webscrapper-)
+- [E-Commerces-WebScraper. ](#e-commerces-webscraper-)
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
   - [Requirements](#requirements)
@@ -67,8 +67,8 @@ Bullet points of the requirements.
 1. Clone the repository with the following command:
 
     ```bash
-    git clone https://github.com/BrenoFariasDaSilva/E-Commerce-WebScrapper.git
-    cd E-Commerce-WebScrapper
+    git clone https://github.com/BrenoFariasDaSilva/E-Commerces-WebScraper.git
+    cd E-Commerces-WebScraper
     ```
 
 ## Installation:
