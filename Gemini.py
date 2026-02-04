@@ -227,19 +227,23 @@ class Gemini:
         self.chat = self.client.chats.create(model=self.model)  # Create a new chat session
         return self.chat  # Return the chat session
 
-    def send_message(self, chat_session, user_message):
+    def send_message(self, message, config=None):
         """
         Send a message in the chat session and get the output.
         
-        :param chat_session: The chat session.
-        :param user_message: The user message to send.
-        :return: The output.
+        :param message: The user message to send.
+        :param config: Optional configuration (temperature, max_output_tokens, etc.).
+        :return: The output text.
         """
         
         verbose_output(true_string=f"{BackgroundColors.GREEN}Sending the message...{Style.RESET_ALL}")
         
-        output = chat_session.send_message(user_message)  # Send the message
-        return output.text  # Return the output
+        if self.chat is None:  # If the chat session has not been started
+            self.start_chat_session()  # Start the chat session
+        
+        assert self.chat is not None  # Ensure chat is initialized
+        response = self.chat.send_message(message)  # Send the message
+        return response.text  # Return the output text
 
     def write_output_to_file(self, output, file_path=OUTPUT_FILE):
         """
