@@ -288,7 +288,15 @@ def main():
     start_time = datetime.datetime.now()  # Get the start time of the program
     
     verify_dot_env_file()  # Verify if the .env file exists
-
+    
+    create_directory(
+        os.path.abspath(INPUT_DIRECTORY), INPUT_DIRECTORY.replace(".", "")
+    )  # Create the input directory
+    
+    create_directory(
+        os.path.abspath(OUTPUT_DIRECTORY), OUTPUT_DIRECTORY.replace(".", "")
+    )  # Create the output directory
+    
     finish_time = datetime.datetime.now()  # Get the finish time of the program
     print(
         f"{BackgroundColors.GREEN}Start time: {BackgroundColors.CYAN}{start_time.strftime('%d/%m/%Y - %H:%M:%S')}\n{BackgroundColors.GREEN}Finish time: {BackgroundColors.CYAN}{finish_time.strftime('%d/%m/%Y - %H:%M:%S')}\n{BackgroundColors.GREEN}Execution time: {BackgroundColors.CYAN}{calculate_execution_time(start_time, finish_time)}{Style.RESET_ALL}"
