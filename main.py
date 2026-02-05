@@ -394,7 +394,7 @@ Gere APENAS o texto formatado, sem explicações adicionais."""
         
         if formatted_output: # If generation successful
             description_dir = os.path.dirname(description_file)  # Get directory of description file
-            formatted_file = os.path.join(description_dir, f"{product_name_safe}_marketing.txt")  # Output file path
+            formatted_file = os.path.join(description_dir, f"Template.txt")  # Output file path
             gemini.write_output_to_file(formatted_output, formatted_file)  # Write output to file
             
             gemini.close()  # Close Gemini client
