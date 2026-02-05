@@ -444,6 +444,34 @@ class MercadoLivre:
         
         return "".join(result)  # Join and return
 
+    def is_valid_product_info(self, product_info):
+        """
+        Validate scraped `product_info` and detect placeholder/default-only results.
+
+        :param product_info: The dict (or value) returned by the scraper.
+        :return: True if `product_info` appears to contain real data, False otherwise.
+        """
+
+        if not product_info:  # If scraping produced no data
+            print(f"{BackgroundColors.RED}Failed to scrape product information.{Style.RESET_ALL}")
+            return False  # Return False
+
+        unknown_defaults = {  # Define default/placeholder values
+            "name": "Unknown Product",
+            "current_price_integer": "0",
+            "current_price_decimal": "00",
+            "old_price_integer": "N/A",
+            "old_price_decimal": "N/A",
+            "discount_percentage": "N/A",
+            "description": "No description available",
+        }
+
+        if isinstance(product_info, dict) and all(product_info.get(k) == v for k, v in unknown_defaults.items()):  # If all values are defaults
+            verbose_output(f"{BackgroundColors.YELLOW}Scrape returned only default values — treating as failure.{Style.RESET_ALL}")
+            return False  # Return False
+
+        return True  # Return True if data appears valid
+
     def create_directory(self, full_directory_name, relative_directory_name):
         """
         Creates a directory.
@@ -720,12 +748,9 @@ class MercadoLivre:
         self.get_product_url()  # Step 1: Get the actual product URL
         
         product_info = self.scrape_product_info(verbose=VERBOSE)  # Step 2: Scrape product information
-        
-        if not product_info:  # If scraping failed
-            print(
-                f"{BackgroundColors.RED}Failed to scrape product information.{Style.RESET_ALL}"
-            )  # Output the error message
-            return None  # Return None on failure
+
+        if not self.is_valid_product_info(product_info):  # Validate scraped product information
+            return None  # Return None if invalid
         
         downloaded_files = self.download_media()  # Step 3: Download media files
         
