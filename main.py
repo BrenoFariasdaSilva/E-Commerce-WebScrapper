@@ -324,7 +324,6 @@ def scrape_product(url):
         product_data = scraper.scrape()  # Scrape the product
         
         if not product_data:  # If scraping failed
-            print(f"{BackgroundColors.RED}Failed to scrape product from: {url}{Style.RESET_ALL}")
             return None, None, None  # Return None values
         
         product_name = product_data.get("name", "Unknown Product")  # Get product name
@@ -584,13 +583,13 @@ def main():
     total_urls = len(urls_to_process)  # Total number of URLs to process
 
     for index, url in enumerate(urls_to_process, 1):  # Iterate through all URLs
-        print(f"{BackgroundColors.GREEN}Processing URL {BackgroundColors.CYAN}{index}{BackgroundColors.GREEN}/{BackgroundColors.CYAN}{total_urls}{BackgroundColors.GREEN}: {BackgroundColors.CYAN}{url}{Style.RESET_ALL}") # Print section header
+        print(f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Processing URL {BackgroundColors.CYAN}{index}{BackgroundColors.GREEN}/{BackgroundColors.CYAN}{total_urls}{BackgroundColors.GREEN}: {BackgroundColors.CYAN}{url}{Style.RESET_ALL}") # Print section header
         
         print(f"{BackgroundColors.CYAN}Step 1{BackgroundColors.GREEN}: Scraping the product information{Style.RESET_ALL}")  # Step 1: Scrape the product information
         product_data, description_file, product_name_safe = scrape_product(url)  # Scrape the product
         
         if not product_data:  # If scraping failed
-            print(f"{BackgroundColors.RED}Skipping URL due to scraping failure.{Style.RESET_ALL}\n")
+            print(f"{BackgroundColors.RED}Skipping {BackgroundColors.CYAN}{url}{BackgroundColors.RED} due to scraping failure.{Style.RESET_ALL}\n")
             continue  # Move to next URL
         
         try:  # Read the product description from the file
