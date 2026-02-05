@@ -23,7 +23,7 @@ Usage:
     2. Prepare input files with URLs or search terms in the ./Inputs/ directory.
     3. Run the script via Makefile or Python:
             $ make run   or   $ python main.py
-    4. Check outputs in the ./Outputs/ directory for scraped data.
+    4. Verify outputs in the ./Outputs/ directory for scraped data.
 
 Outputs:
     - Scraped data files (e.g., products.csv, output.txt)
@@ -273,7 +273,7 @@ def sanitize_filename(filename):
 
 def detect_platform(url):
     """
-    Detects the e-commerce platform from a given URL by checking domain names.
+    Detects the e-commerce platform from a given URL by verifying domain names.
     
     :param url: The product URL to analyze
     :return: Platform name (e.g., 'mercadolivre', 'shein', 'shopee') or None if not recognized
@@ -282,7 +282,7 @@ def detect_platform(url):
     url_lower = url.lower()  # Convert URL to lowercase for case-insensitive matching
     
     for platform_name, platform_id in PLATFORMS_MAP.items():  # Iterate through supported platforms
-        if platform_id in url_lower:  # Check if platform identifier is in URL
+        if platform_id in url_lower:  # Verify if platform identifier is in URL
             verbose_output(
                 f"{BackgroundColors.GREEN}Detected platform: {BackgroundColors.CYAN}{platform_name}{Style.RESET_ALL}"
             )
