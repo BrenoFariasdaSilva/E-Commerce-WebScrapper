@@ -342,6 +342,39 @@ def scrape_product(url):
         return None, None, None  # Return None values
 
 
+def validate_product_information(product_data, product_name_safe, description_file):
+    """
+    Validates the product information to determine if it is likely to be a real product description or a placeholder/invalid entry.
+
+    :param product_data: The dictionary containing the scraped product data (used to verify for missing fields or values)
+    :param product_name_safe: The sanitized product name (used to verify for "Unknown Product" placeholders)
+    :param description_file: The path to the description file (used to verify for placeholder file paths)
+    :return: Tuple of (is_valid boolean, list of reasons for invalidity)
+    """
+
+    reasons = []  # List to store reasons why the product information might be invalid
+
+    if not product_data:  # Verify if product data is None or empty
+        reasons.append(f"{BackgroundColors.YELLOW}Product data is missing or empty{Style.RESET_ALL}")
+        
+    if product_name_safe == "Unknown Product":  # Verify if the product name is the default placeholder
+        reasons.append(f"{BackgroundColors.YELLOW}Product name is a placeholder (Unknown Product){Style.RESET_ALL}") 
+        
+    if "name" not in product_data or not product_data["name"].strip():  # Verify if name is missing or empty
+        reasons.append(f"{BackgroundColors.YELLOW}Product name is missing or empty{Style.RESET_ALL}")
+        
+    if "price" not in product_data or not str(product_data["price"]).strip():  # Verify if price is missing or empty
+        reasons.append(f"{BackgroundColors.YELLOW}Product price is missing or empty{Style.RESET_ALL}")
+        
+    if "discount" not in product_data or not str(product_data["discount"]).strip():  # Verify if discount is missing or empty
+        reasons.append(f"{BackgroundColors.YELLOW}Product discount is missing or empty{Style.RESET_ALL}")
+    
+    if "description" not in product_data or not product_data["description"].strip():  # Verify if description is missing or empty
+        reasons.append(f"{BackgroundColors.YELLOW}Product description is missing or empty{Style.RESET_ALL}")
+        
+    return (len(reasons) == 0), reasons  # Return True if valid (no reasons), otherwise False and the list of reasons
+
+
 def generate_marketing_text(product_description, product_name_safe, description_file):
     """
     Generates marketing text from product description using Gemini AI.
@@ -567,7 +600,16 @@ def main():
             print(f"{BackgroundColors.RED}Error reading description file: {e}{Style.RESET_ALL}")
             continue  # Move to next URL
         
+        valid, invalid_reasons = validate_product_information(product_data, product_name_safe, description_file)  # Validate the product information
+
+        if not valid:  # If the product information is not valid, skip Gemini formatting and output the reasons
+            print(
+                f"{BackgroundColors.RED}Skipping Step 2: Gemini formatting due to invalid product information for URL: {BackgroundColors.CYAN}{url}{BackgroundColors.RED}.{Style.RESET_ALL}"
+            )
+            continue  # Move to next URL
+
         print(f"{BackgroundColors.CYAN}Step 2{BackgroundColors.GREEN}: Formatting with Gemini AI{Style.RESET_ALL}")  # Step 2: Format the product description with Gemini AI
+        
         success = generate_marketing_text(product_description, product_name_safe, description_file)  # Generate marketing text
         
         if success:  # If both scraping and formatting succeeded
