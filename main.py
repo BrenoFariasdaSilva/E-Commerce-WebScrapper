@@ -55,6 +55,7 @@ Assumptions & Notes:
 
 import atexit  # For playing a sound when the program finishes
 import datetime  # For getting the current date and time
+import hashlib  # For hashing image data
 import os  # For running a command in the terminal
 import platform  # For getting the operating system name
 import shutil  # For removing directories
@@ -66,7 +67,8 @@ from dotenv import load_dotenv  # For loading environment variables
 from Gemini import Gemini  # Import the Gemini class
 from Logger import Logger  # For logging output to both terminal and file
 from MercadoLivre import MercadoLivre  # Import the MercadoLivre class
-# from Shein import Shein  # Import the Shein class
+from pathlib import Path  # For handling file paths
+from PIL import Image  # For image processing
 # from Shopee import Shopee  # Import the Shopee class
 from pathlib import Path  # For handling file paths
 
@@ -248,6 +250,127 @@ def clean_unknown_product_directories(output_directory):
                 verbose_output(f"{BackgroundColors.YELLOW}Removed old 'Unknown Product' directory: {item_path}{Style.RESET_ALL}")
     except Exception as e:  # If an error occurs during cleanup
         print(f"{BackgroundColors.RED}Error during cleanup of 'Unknown Product' directories: {e}{Style.RESET_ALL}")
+
+
+def get_image_files(product_dir):
+    """
+    Retrieves a list of image files from the specified product directory.
+
+    :param product_dir: Path to the product directory
+    :return: List of image filenames (webp, jpg, jpeg, png)
+    """
+    
+    return [f for f in os.listdir(product_dir) if f.lower().endswith((".webp", ".jpg", ".jpeg", ".png"))]
+
+
+def load_images(product_dir, image_files):
+    """
+    Loads image objects from the list of image files using PIL.
+
+    :param product_dir: Path to the product directory
+    :param image_files: List of image filenames
+    :return: List of tuples (image_path, size_tuple, PIL_Image_object)
+    """
+    
+    images = []  # List to store loaded images
+    for img_file in image_files:  # Iterate through image files
+        img_path = os.path.join(product_dir, img_file)  # Get the full path of the image file
+        try:  # Try to open the image
+            img = Image.open(img_path)  # Open the image using PIL
+            images.append((img_path, img.size, img))  # Store the image path, size, and object
+        except Exception as e:  # If opening the image fails
+            print(f"{BackgroundColors.RED}Error opening image {img_path}: {e}{Style.RESET_ALL}")
+    
+    return images  # Return the list of loaded images
+
+
+def find_min_dimensions(images):
+    """
+    Finds the minimum width and height across all loaded images.
+
+    :param images: List of tuples (image_path, size_tuple, PIL_Image_object)
+    :return: Tuple (min_width, min_height)
+    """
+    
+    min_width = min(size[0] for _, size, _ in images)  # Find the minimum width
+    min_height = min(size[1] for _, size, _ in images)  # Find the minimum height
+    
+    return min_width, min_height  # Return the minimum dimensions
+
+
+def group_images_by_resized_hash(images, min_width, min_height):
+    """
+    Groups images by their MD5 hash after resizing to the minimum dimensions.
+    This detects duplicates by content similarity after normalization.
+
+    :param images: List of tuples (image_path, size_tuple, PIL_Image_object)
+    :param min_width: Minimum width to resize to
+    :param min_height: Minimum height to resize to
+    :return: Dictionary with hash as key, list of (image_path, pixel_count) as values
+    """
+    
+    groups = {}  # Dictionary to group images by hash
+    
+    for img_path, size, img in images:  # Iterate through loaded images
+        resized = img.resize((min_width, min_height), Image.Resampling.LANCZOS)  # Resize image to minimum dimensions
+        resized_bytes = resized.tobytes()  # Get the byte representation of the resized image
+        img_hash = hashlib.md5(resized_bytes).hexdigest()  # Compute MD5 hash of the resized image
+    
+        if img_hash not in groups:  # If this hash is not yet in the groups
+            groups[img_hash] = []  # Initialize a new list for this hash
+        groups[img_hash].append((img_path, size[0] * size[1]))  # store path and pixel count
+    
+    return groups  # Return the grouped images
+
+
+def remove_duplicate_images(groups):
+    """
+    For each group of duplicate images (same hash), keeps the highest resolution version
+    and deletes the lower resolution duplicates.
+
+    :param groups: Dictionary with hash as key, list of (image_path, pixel_count) as values
+    :return: None
+    """
+    
+    for img_hash, group in groups.items():  # Iterate through each group of images
+        if len(group) > 1:  # If there are duplicates in this group
+            group.sort(key=lambda x: x[1], reverse=True)  # Sort by pixel count descending (highest resolution first)
+            for img_path, _ in group[1:]:  # Delete all except the first (highest res)
+                try:  # Try to remove the duplicate image
+                    os.remove(img_path)  # Remove the image file
+                    verbose_output(f"{BackgroundColors.YELLOW}Removed duplicate image: {BackgroundColors.CYAN}{img_path}{Style.RESET_ALL}")
+                except Exception as e:  # If an error occurs while removing the image
+                    print(f"{BackgroundColors.RED}Error removing image {BackgroundColors.CYAN}{img_path}{BackgroundColors.RED}: {BackgroundColors.YELLOW}{e}{Style.RESET_ALL}")
+
+
+def clean_duplicate_images(product_name_safe):
+    """
+    Cleans up duplicate images in the product directory by normalizing all images to the smallest size,
+    computing MD5 hashes of the resized versions, and removing lower-resolution duplicates while keeping
+    the highest-resolution version of each unique image.
+
+    This approach detects duplicates that may have different resolutions but represent the same content,
+    such as thumbnails and full-size images.
+
+    :param product_name_safe: Safe product name for directory path
+    :return: None
+    """
+    
+    product_dir = os.path.join(OUTPUT_DIRECTORY, product_name_safe)  # Path to the product directory
+    if not os.path.exists(product_dir):  # If the product directory does not exist
+        return  # Return if the directory does not exist
+    
+    image_files = get_image_files(product_dir)  # Get list of image files
+    if len(image_files) < 2:  # If there are less than 2 images, no duplicates possible
+        return
+    
+    images = load_images(product_dir, image_files)  # Load images using PIL
+    if not images:  # If no images were loaded successfully
+        return  # Return if no images loaded
+    
+    min_width, min_height = find_min_dimensions(images)  # Find minimum dimensions among images
+    groups = group_images_by_resized_hash(images, min_width, min_height)  # Group images by hash of resized versions
+    remove_duplicate_images(groups)  # Remove duplicate images
 
 
 def load_urls_to_process(test_urls, input_file):
@@ -616,6 +739,8 @@ def main():
         
         print(f"{BackgroundColors.CYAN}Step 1{BackgroundColors.GREEN}: Scraping the product information{Style.RESET_ALL}")  # Step 1: Scrape the product information
         product_data, description_file, product_name_safe = scrape_product(url)  # Scrape the product
+        
+        clean_duplicate_images(product_name_safe)  # Clean up duplicate images in the product directory
         
         if not product_data:  # If scraping failed
             print(f"{BackgroundColors.RED}Skipping {BackgroundColors.CYAN}{url}{BackgroundColors.RED} due to scraping failure.{Style.RESET_ALL}\n")
