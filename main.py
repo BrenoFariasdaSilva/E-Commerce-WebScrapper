@@ -373,6 +373,32 @@ def clean_duplicate_images(product_name_safe):
     remove_duplicate_images(groups)  # Remove duplicate images
 
 
+def exclude_small_images(product_name_safe, min_size_bytes=2048):
+    """
+    Excludes (deletes) image files smaller than the specified minimum size in bytes.
+    This helps remove very small or corrupted images that are likely thumbnails or placeholders.
+
+    :param product_name_safe: Safe product name for directory path
+    :param min_size_bytes: Minimum file size in bytes (default 2048 = 2KB)
+    :return: None
+    """
+    
+    product_dir = os.path.join(OUTPUT_DIRECTORY, product_name_safe)  # Path to the product directory
+    
+    if not os.path.exists(product_dir):  # If the product directory does not exist
+        return  # Return if the directory does not exist
+    
+    image_files = get_image_files(product_dir)  # Get list of image files
+    for img_file in image_files:  # Iterate through image files
+        img_path = os.path.join(product_dir, img_file)  # Get the full path of the image file
+        try:  # Try to check the file size
+            size = os.path.getsize(img_path)  # Get the size of the image file in bytes
+            if size < min_size_bytes:  # If the image file is smaller than the minimum size
+                os.remove(img_path)  # Remove the image file
+                verbose_output(f"{BackgroundColors.YELLOW}Removed small image (<{min_size_bytes} bytes): {BackgroundColors.CYAN}{img_path}{Style.RESET_ALL}")
+        except Exception as e:  # If an error occurs while checking/removing the image
+            print(f"{BackgroundColors.RED}Error checking/removing image {BackgroundColors.CYAN}{img_path}{BackgroundColors.RED}: {BackgroundColors.YELLOW}{e}{Style.RESET_ALL}")
+
 def load_urls_to_process(test_urls, input_file):
     """
     Determine and return the list of URLs to process.
@@ -741,6 +767,8 @@ def main():
         product_data, description_file, product_name_safe = scrape_product(url)  # Scrape the product
         
         clean_duplicate_images(product_name_safe)  # Clean up duplicate images in the product directory
+        
+        exclude_small_images(product_name_safe)  # Exclude images smaller than 2KB
         
         if not product_data:  # If scraping failed
             print(f"{BackgroundColors.RED}Skipping {BackgroundColors.CYAN}{url}{BackgroundColors.RED} due to scraping failure.{Style.RESET_ALL}\n")
