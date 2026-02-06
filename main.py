@@ -362,10 +362,10 @@ def validate_product_information(product_data, product_name_safe, description_fi
     if "name" not in product_data or not product_data["name"].strip():  # Verify if name is missing or empty
         reasons.append(f"{BackgroundColors.YELLOW}Product name is missing or empty{Style.RESET_ALL}")
         
-    if "price" not in product_data or not str(product_data["price"]).strip():  # Verify if price is missing or empty
-        reasons.append(f"{BackgroundColors.YELLOW}Product price is missing or empty{Style.RESET_ALL}")
+    if "current_price_integer" not in product_data or not str(product_data["current_price_integer"]).strip() or product_data["current_price_integer"] == '0':  # Verify if price is missing, empty, or zero
+        reasons.append(f"{BackgroundColors.YELLOW}Product price is missing, empty, or zero{Style.RESET_ALL}")
         
-    if "discount" not in product_data or not str(product_data["discount"]).strip():  # Verify if discount is missing or empty
+    if "discount_percentage" not in product_data or not str(product_data["discount_percentage"]).strip():  # Verify if discount is missing or empty
         reasons.append(f"{BackgroundColors.YELLOW}Product discount is missing or empty{Style.RESET_ALL}")
     
     if "description" not in product_data or not product_data["description"].strip():  # Verify if description is missing or empty
