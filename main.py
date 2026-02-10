@@ -391,7 +391,7 @@ def exclude_small_images(product_name_safe, min_size_bytes=2048):
     image_files = get_image_files(product_dir)  # Get list of image files
     for img_file in image_files:  # Iterate through image files
         img_path = os.path.join(product_dir, img_file)  # Get the full path of the image file
-        try:  # Try to check the file size
+        try:  # Try to get the file size
             size = os.path.getsize(img_path)  # Get the size of the image file in bytes
             if size < min_size_bytes:  # If the image file is smaller than the minimum size
                 os.remove(img_path)  # Remove the image file

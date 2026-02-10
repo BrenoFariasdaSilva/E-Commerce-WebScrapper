@@ -842,7 +842,7 @@ def output_result(result):
         )  # Output the results
     else:  # If scraping failed
         print(
-            f"\n{BackgroundColors.RED}Scraping failed. Please check the URL and try again.{Style.RESET_ALL}\n"
+            f"\n{BackgroundColors.RED}Scraping failed. Please verify the URL and try again.{Style.RESET_ALL}\n"
         )  # Output the error message
 
 
