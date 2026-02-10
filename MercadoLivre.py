@@ -240,6 +240,26 @@ class MercadoLivre:
             self.product_data["is_international"] = False  # Set the product data flag to False
             return False  # Return False on error
 
+    def prefix_international_name(self):
+        """
+        Prefix the scraped product name with "INTERNACIONAL - " when
+        `self.product_data['is_international']` is True.
+
+        This method is separated from detection to keep responsibilities clear.
+        """
+        
+        try:  # Try to prefix the product name
+            if self.product_data.get("is_international"):  # Check if the product is marked as international
+                name = self.product_data.get("name", "") or ""  # Get the current product name
+                if not name.startswith("INTERNACIONAL - "):  # Avoid double prefixing
+                    self.product_data["name"] = f"INTERNACIONAL - {name}"  # Prefix the name
+                print(
+                    f"{BackgroundColors.GREEN}Marked as international product: {self.product_data['name']}{Style.RESET_ALL}"
+                )  # Output the verbose message
+        except Exception:  # If any error occurs during prefixing, skip it without changing the name
+            # Non-fatal: don't change name if prefixing fails
+            pass
+
     def extract_current_price(self, soup):
         """
         Extracts the current price from the parsed HTML soup.
@@ -383,7 +403,7 @@ class MercadoLivre:
             self.product_data["name"] = self.extract_product_name(soup)  # Extract product name
 
             if self.detect_international(soup):  # Detect if the product is marked as international
-                pass
+                self.prefix_international_name()  # Prefix the product name if it's international
             
             current_price_int, current_price_dec = self.extract_current_price(soup)  # Extract current price
             self.product_data["current_price_integer"] = current_price_int  # Store integer part
