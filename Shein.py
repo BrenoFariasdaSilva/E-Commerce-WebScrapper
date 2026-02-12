@@ -147,6 +147,27 @@ def verbose_output(true_string="", false_string=""):
         print(false_string)  # Output the false statement string
 
 
+def output_result(result):
+    """
+    Outputs the result to the terminal.
+
+    :param result: The result to be outputted
+    :return: None
+    """
+
+    if result:  # If there is a result
+        print(
+            f"{BackgroundColors.GREEN}Scraping successful! Product data:{Style.RESET_ALL}\n"
+            f"  {BackgroundColors.CYAN}Name:{Style.RESET_ALL} {result.get('name', 'N/A')}\n"
+            f"  {BackgroundColors.CYAN}Price:{Style.RESET_ALL} R${result.get('current_price_integer', 'N/A')},{result.get('current_price_decimal', 'N/A')}\n"
+            f"  {BackgroundColors.CYAN}Files:{Style.RESET_ALL} {len(result.get('downloaded_files', []))} downloaded"
+        )
+    else:  # If there is no result
+        print(
+            f"{BackgroundColors.RED}Scraping failed. No data returned.{Style.RESET_ALL}"
+        )
+
+
 def verify_filepath_exists(filepath):
     """
     Verify if a file or folder exists at the specified path.
