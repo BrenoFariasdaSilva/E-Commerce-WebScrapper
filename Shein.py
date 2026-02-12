@@ -290,22 +290,35 @@ def main():
     """
 
     print(
-        f"{BackgroundColors.CLEAR_TERMINAL}{BackgroundColors.BOLD}{BackgroundColors.GREEN}Welcome to the {BackgroundColors.CYAN}Main Template Python{BackgroundColors.GREEN} program!{Style.RESET_ALL}",
-        end="\n\n",
-    )  # Output the welcome message
-    start_time = datetime.datetime.now()  # Get the start time of the program
+        f"{BackgroundColors.CLEAR_TERMINAL}{BackgroundColors.BOLD}{BackgroundColors.GREEN}Welcome to the {BackgroundColors.CYAN}Shein Scraper{BackgroundColors.GREEN} program!{Style.RESET_ALL}",
+        end="\n",
+    )
+    start_time = datetime.datetime.now()
 
-    finish_time = datetime.datetime.now()  # Get the finish time of the program
+    test_url = "https://br.shein.com/product-example"  # Test URL
+    
+    verbose_output(
+        f"{BackgroundColors.GREEN}Testing Shein scraper with URL: {BackgroundColors.CYAN}{test_url}{Style.RESET_ALL}\n"
+    )
+    
+    try:
+        scraper = Shein(test_url)
+        result = scraper.scrape()
+        output_result(result)
+    except Exception as e:
+        print(f"{BackgroundColors.RED}Error during test: {e}{Style.RESET_ALL}")
+
+    finish_time = datetime.datetime.now()
     print(
         f"{BackgroundColors.GREEN}Start time: {BackgroundColors.CYAN}{start_time.strftime('%d/%m/%Y - %H:%M:%S')}\n{BackgroundColors.GREEN}Finish time: {BackgroundColors.CYAN}{finish_time.strftime('%d/%m/%Y - %H:%M:%S')}\n{BackgroundColors.GREEN}Execution time: {BackgroundColors.CYAN}{calculate_execution_time(start_time, finish_time)}{Style.RESET_ALL}"
-    )  # Output the start and finish times
+    )
     print(
-        f"\n{BackgroundColors.BOLD}{BackgroundColors.GREEN}Program finished.{Style.RESET_ALL}"
-    )  # Output the end of the program message
-
+        f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Program finished.{Style.RESET_ALL}"
+    )
+    
     (
         atexit.register(play_sound) if RUN_FUNCTIONS["Play Sound"] else None
-    )  # Register the play_sound function to be called when the program finishes
+    )
 
 
 if __name__ == "__main__":
@@ -315,4 +328,4 @@ if __name__ == "__main__":
     :return: None
     """
 
-    main()  # Call the main function
+    main()
