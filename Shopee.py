@@ -656,7 +656,67 @@ class Shopee:
         output_dir = os.path.join(OUTPUT_DIRECTORY, product_name_safe)  # Construct full path for product output directory
         self.create_directory(os.path.abspath(output_dir), output_dir.replace(".", ""))  # Create directory with absolute path and cleaned relative name
         
-        return output_dir  # Return the created output directory pathdef verbose_output(true_string="", false_string=""):
+        return output_dir  # Return the created output directory path
+
+
+    def _collect_assets(self, html_content: str, output_dir: str) -> Dict[str, str]:
+        """
+        Collects and downloads all assets (images, CSS, JS) from the page.
+
+        :param html_content: Rendered HTML string
+        :param output_dir: Directory to save assets
+        :return: Dictionary mapping original URLs to local paths
+        """
+
+        verbose_output(  # Output status message to user
+            f"{BackgroundColors.GREEN}Collecting page assets...{Style.RESET_ALL}"
+        )  # End of verbose output call
+
+        if self.page is None:  # Validate that page instance exists before collecting assets
+            print(f"{BackgroundColors.YELLOW}Warning: Page not initialized, skipping asset collection.{Style.RESET_ALL}")  # Warn user that asset collection will be skipped
+            return {}  # Return empty dictionary when page is not available
+
+        assets_dir = os.path.join(output_dir, "assets")  # Construct path for assets subdirectory
+        self.create_directory(assets_dir, "assets")  # Create assets subdirectory
+        
+        asset_map: Dict[str, str] = {}  # Maps original URL to local path  # Initialize empty dictionary to map original URLs to local paths
+        soup = BeautifulSoup(html_content, "html.parser")  # Parse HTML content into BeautifulSoup object
+
+        img_tags = soup.find_all("img", src=True)  # Find all image tags with src attribute
+        for idx, img in enumerate(img_tags, 1):  # Iterate through each image tag with index starting from 1
+            if not isinstance(img, Tag):  # Ensure the element is a BeautifulSoup Tag before accessing attributes
+                continue  # Skip non-Tag elements (e.g., NavigableString) to avoid attribute errors
+            src_attr = img.get("src")  # Get the src attribute value from image tag
+            if src_attr and isinstance(src_attr, str):  # Validate that src is a non-empty string
+                src = str(src_attr)  # Ensure it's a string  # Cast src to string for consistency
+                absolute_url = urljoin(self.product_url, src)  # Convert relative URL to absolute URL
+                try:  # Attempt to download image with error handling
+                    response = self.page.goto(absolute_url, timeout=10000)  # Navigate to image URL to download it
+                    if response and response.ok:  # Verify if response is successful
+                        # Generate unique filename
+                        parsed_url = urlparse(absolute_url)  # Parse URL to extract components
+                        ext = os.path.splitext(parsed_url.path)[1] or ".jpg"  # Extract file extension or use default .jpg
+                        filename = f"image_{idx}{ext}"  # Generate filename with index and extension
+                        filepath = os.path.join(assets_dir, filename)  # Construct full file path for saving
+                        
+                        # Save asset
+                        with open(filepath, "wb") as f:  # Open file in binary write mode
+                            f.write(response.body())  # Write response body to file
+                        
+                        asset_map[src] = f"assets/{filename}"  # Map original URL to local relative path
+                        verbose_output(  # Log successful download
+                            f"{BackgroundColors.GREEN}Downloaded: {filename}{Style.RESET_ALL}"
+                        )  # End of verbose output call
+                except Exception as e:  # Catch any exceptions during download
+                    verbose_output(  # Log download failure with error
+                        f"{BackgroundColors.YELLOW}Failed to download {src}: {e}{Style.RESET_ALL}"
+                    )  # End of verbose output call
+
+        verbose_output(  # Log total number of assets collected
+            f"{BackgroundColors.GREEN}Collected {len(asset_map)} assets.{Style.RESET_ALL}"
+        )  # End of verbose output call
+        
+        return asset_map  # Return dictionary mapping URLs to local pathsdef verbose_output(true_string="", false_string=""):
     """
     Outputs a message if the VERBOSE constant is set to True.
 
