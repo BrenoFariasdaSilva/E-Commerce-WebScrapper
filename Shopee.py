@@ -809,13 +809,18 @@ class Shopee:
             
             discount = product_data.get('discount_percentage', 'N/A')  # Get discount percentage or default
             
-            # Format the description content
+            description_text = product_data.get('description', 'No description available')  # Product description with fallback
+            try:  # Attempt to convert description to sentence case with error handling
+                description_text = self.to_sentence_case(description_text)  # Convert description to sentence case for better readability
+            except Exception:  # Catch any exceptions during sentence case conversion
+                pass  # If conversion fails, use original description text without modification
+
             content = PRODUCT_DESCRIPTION_TEMPLATE.format(  # Format template with product data
                 product_name=product_data.get('name', 'Unknown Product'),  # Product name with fallback
                 current_price=current_price,  # Formatted current price
                 old_price=old_price,  # Formatted old price or N/A
                 discount=discount,  # Discount percentage or N/A
-                description=product_data.get('description', 'No description available'),  # Product description with fallback
+                description=description_text,  # Sentence-cased product description
                 url=url  # Original product URL
             )  # End of format method call
             
@@ -831,6 +836,30 @@ class Shopee:
         except Exception as e:  # Catch any exceptions during file creation
             print(f"{BackgroundColors.RED}Failed to create description file: {e}{Style.RESET_ALL}")  # Alert user about file creation failure
             return None  # Return None to indicate creation failed
+
+    def to_sentence_case(self, text: str) -> str:
+        """
+        Converts text to sentence case (first letter of each sentence uppercase).
+
+        :param text: The text to convert
+        :return: Text in sentence case
+        """
+
+        if not text:  # Validate that text is not empty before processing
+            return text  # Return original text if it's empty or None
+
+        sentences = re.split(r"([.!?]\s*)", text)  # Keep the delimiters
+
+        result = []  # Initialize list to hold processed sentences
+        for i, sentence in enumerate(sentences):  # Iterate through each sentence with index
+            if sentence.strip():  # Process only non-empty sentences
+                if i % 2 == 0:  # Even indices are the actual sentence content
+                    sentence = sentence.strip()  # Remove leading/trailing whitespace
+                    if sentence:  # Ensure sentence is not empty after stripping
+                        sentence = sentence[0].upper() + sentence[1:].lower()  # Capitalize first letter and lowercase the rest
+                result.append(sentence)  # Append processed sentence or delimiter to result list
+
+        return "".join(result)  # Join all sentences and delimiters back into a single string
 
 
     def download_media(self) -> List[str]:
