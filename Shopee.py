@@ -90,8 +90,27 @@ class BackgroundColors:  # Colors for the terminal
 # Execution Constants:
 VERBOSE = False  # Set to True to output verbose messages
 
-# Telegram Bot Setup:
-TELEGRAM_BOT = None  # Global Telegram bot instance (initialized in setup_telegram_bot)
+# Output Directory Constants:
+OUTPUT_DIRECTORY = "./Outputs/"  # Base directory for storing scraped data and media files
+
+# Browser Constants:
+CHROME_PROFILE_PATH = os.getenv("CHROME_PROFILE_PATH", "")  # Chrome user profile path from environment variable
+CHROME_EXECUTABLE_PATH = os.getenv("CHROME_EXECUTABLE_PATH", "")  # Chrome executable path from environment variable
+HEADLESS = os.getenv("HEADLESS", "False").lower() == "true"  # Run browser in headless mode flag from environment
+PAGE_LOAD_TIMEOUT = 30000  # Maximum time in milliseconds to wait for page load
+NETWORK_IDLE_TIMEOUT = 5000  # Maximum time in milliseconds to wait for network idle state
+SCROLL_PAUSE_TIME = 0.5  # Pause duration in seconds between scroll steps
+SCROLL_STEP = 300  # Number of pixels to scroll per step for lazy loading
+
+# Template Constants:
+PRODUCT_DESCRIPTION_TEMPLATE = """Product Name: {product_name}
+
+Price: From R${current_price} to R${old_price} ({discount})
+
+Description: {description}
+
+🛒 Encontre na Shopee:
+👉 {url}"""  # Template for product description text file with placeholders for formatting
 
 # Logger Setup:
 logger = Logger(f"./Logs/{Path(__file__).stem}.log", clean=True)  # Create a Logger instance
