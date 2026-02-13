@@ -612,7 +612,14 @@ class Shein:
             else:  # Handle case when old price is not available
                 old_price = "N/A"  # Use N/A as old price placeholder
             discount = product_data.get('discount_percentage', 'N/A')  # Get discount percentage or default
-            content = PRODUCT_DESCRIPTION_TEMPLATE.format(product_name=product_data.get('name', 'Unknown Product'), current_price=current_price, old_price=old_price, discount=discount, description=product_data.get('description', 'No description available'), url=url)  # Format template with product data
+
+            description_text = product_data.get('description', 'No description available')  # Get product description or default message
+            try:  # Attempt to convert description to sentence case with error handling
+                description_text = self.to_sentence_case(description_text)  # Convert description text to sentence case for improved readability
+            except Exception:  # Catch any exceptions during sentence case conversion but continue with original description
+                pass  # If conversion fails, use original description without modification
+
+            content = PRODUCT_DESCRIPTION_TEMPLATE.format(product_name=product_data.get('name', 'Unknown Product'), current_price=current_price, old_price=old_price, discount=discount, description=description_text, url=url)  # Format template with product data
             with open(description_file_path, "w", encoding="utf-8") as f:  # Open file in write mode with UTF-8 encoding
                 f.write(content)  # Write formatted content to file
             verbose_output(f"{BackgroundColors.GREEN}Description file created: {description_file_path}{Style.RESET_ALL}")
@@ -620,6 +627,29 @@ class Shein:
         except Exception as e:  # Catch any exceptions during file creation
             print(f"{BackgroundColors.RED}Failed to create description file: {e}{Style.RESET_ALL}")  # Alert user about file creation failure
             return None  # Return None to indicate creation failed
+
+    def to_sentence_case(self, text=""):
+        """
+        Converts text to sentence case (first letter of each sentence uppercase).
+
+        :param text: The text to convert
+        :return: Text in sentence case
+        """
+
+        if not text:  # Validate that input text is not empty or None
+            return text  # Return original text if it's empty to avoid unnecessary processing
+
+        sentences = re.split(r"([.!?]\s*)", text)  # Split text into sentences while keeping delimiters
+        result = []  # Initialize list to hold processed sentences
+        for i, sentence in enumerate(sentences):  # Iterate through each sentence with index for processing
+            if sentence.strip():  # Check if sentence has non-whitespace content before processing
+                if i % 2 == 0:  # Process only the actual sentences, not the delimiters
+                    sentence = sentence.strip()  # Remove leading and trailing whitespace from sentence
+                    if sentence:  # Validate that sentence is not empty after stripping
+                        sentence = sentence[0].upper() + sentence[1:].lower()  # Convert first character to uppercase and the rest to lowercase for sentence case formatting
+                result.append(sentence)  # Add processed sentence or delimiter back to result list
+
+        return "".join(result)  # Join all processed sentences and delimiters back into a single string and return it
 
     def download_media(self):
         """
