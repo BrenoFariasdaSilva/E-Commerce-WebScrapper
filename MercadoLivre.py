@@ -123,16 +123,19 @@ class MercadoLivre:
     It also generates a marketing description file in a predefined template format.
     """
 
-    def __init__(self, url):
+    def __init__(self, url, local_html_path=None):
         """
-        Initializes the MercadoLivre scraper with a product URL.
+        Initializes the MercadoLivre scraper with a product URL and optional local HTML file path.
 
         :param url: The URL of the Mercado Livre product page to scrape
+        :param local_html_path: Optional path to a local HTML file for offline scraping
         :return: None
         """
 
         self.url = url  # Store the initial URL
         self.product_url = None  # Will store the actual product page URL
+        self.local_html_path = local_html_path  # Store path to local HTML file for offline scraping
+        self.html_content = None  # Store HTML content for reuse (from HTTP request or local file)
         self.session = requests.Session()  # Create a session for making requests
         self.session.headers.update({
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -142,6 +145,10 @@ class MercadoLivre:
         verbose_output(
             f"{BackgroundColors.GREEN}MercadoLivre scraper initialized with URL: {BackgroundColors.CYAN}{url}{Style.RESET_ALL}"
         )  # Output the verbose message
+        if local_html_path:  # If local HTML file path is provided
+            verbose_output(
+                f"{BackgroundColors.GREEN}Offline mode enabled. Will read from: {BackgroundColors.CYAN}{local_html_path}{Style.RESET_ALL}"
+            )  # Output offline mode message
 
     def get_product_url(self):
         """
@@ -206,6 +213,38 @@ class MercadoLivre:
             )  # Output the error message
             self.product_url = self.url  # Use the original URL as fallback
             return self.product_url  # Return the URL
+
+    def read_local_html(self):
+        """
+        Reads HTML content from a local file for offline scraping.
+
+        :return: HTML content string or None if failed
+        """
+
+        verbose_output(
+            f"{BackgroundColors.GREEN}Reading local HTML file: {BackgroundColors.CYAN}{self.local_html_path}{Style.RESET_ALL}"
+        )  # Output the verbose message
+
+        try:  # Attempt to read file with error handling
+            if not self.local_html_path:  # Verify if local HTML path is not set
+                print(f"{BackgroundColors.RED}No local HTML path provided.{Style.RESET_ALL}")  # Alert user that path is missing
+                return None  # Return None if path doesn't exist
+            
+            if not os.path.exists(self.local_html_path):  # Verify if file doesn't exist
+                print(f"{BackgroundColors.RED}Local HTML file not found: {BackgroundColors.CYAN}{self.local_html_path}{Style.RESET_ALL}")  # Alert user that file is missing
+                return None  # Return None if file doesn't exist
+            
+            with open(self.local_html_path, "r", encoding="utf-8") as file:  # Open file with UTF-8 encoding
+                html_content = file.read()  # Read entire file content
+            
+            verbose_output(
+                f"{BackgroundColors.GREEN}Local HTML content loaded successfully.{Style.RESET_ALL}"
+            )  # Output success message
+            return html_content  # Return the HTML content string
+            
+        except Exception as e:  # Catch any exceptions during file reading
+            print(f"{BackgroundColors.RED}Error reading local HTML file: {e}{Style.RESET_ALL}")  # Alert user about file reading error
+            return None  # Return None to indicate reading failed
 
     def extract_product_name(self, soup):
         """
@@ -379,6 +418,7 @@ class MercadoLivre:
         """
         Scrapes product information from the product page by orchestrating
         the extraction of individual data components.
+        Works for both online (HTTP request) and offline (local HTML file) modes.
 
         :param verbose: Boolean flag to enable verbose output
         :return: Dictionary containing the scraped product data
@@ -394,11 +434,17 @@ class MercadoLivre:
             )  # Output the error message
             return None  # Return None on invalid URL
 
-        try:  # Try to fetch and parse the product page
-            response = self.session.get(self.product_url, timeout=10)  # Make a GET request to the product URL
-            response.raise_for_status()  # Raise an exception for bad status codes
+        try:  # Try to parse the product page
+            if self.html_content:  # If HTML content is already stored (from local file)
+                html_text = self.html_content  # Use the stored HTML content
+                verbose_output(f"{BackgroundColors.GREEN}Using stored HTML content{Style.RESET_ALL}")
+            else:  # Otherwise, fetch from URL
+                response = self.session.get(self.product_url, timeout=10)  # Make a GET request to the product URL
+                response.raise_for_status()  # Raise an exception for bad status codes
+                html_text = response.text  # Get the HTML content from response
+                self.html_content = html_text  # Store for later use
             
-            soup = BeautifulSoup(response.text, "html.parser")  # Parse the HTML content (use str to satisfy type checkers)
+            soup = BeautifulSoup(html_text, "html.parser")  # Parse the HTML content (use str to satisfy type checkers)
             
             self.product_data["name"] = self.extract_product_name(soup)  # Extract product name
 
@@ -784,6 +830,7 @@ class MercadoLivre:
     def scrape(self, verbose=VERBOSE):
         """
         Main scraping method that orchestrates the entire scraping process.
+        Supports both online scraping (via HTTP requests) and offline scraping (from local HTML file).
 
         :param verbose: Boolean flag to enable verbose output
         :return: Dictionary containing all scraped data and downloaded file paths
@@ -793,7 +840,16 @@ class MercadoLivre:
             f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Starting {BackgroundColors.CYAN}Mercado Livre{BackgroundColors.GREEN} Scraping process...{Style.RESET_ALL}"
         )  # Output the start message
         
-        self.get_product_url()  # Step 1: Get the actual product URL
+        if self.local_html_path:  # If local HTML file path is provided
+            print(f"{BackgroundColors.GREEN}Using offline mode with local HTML file{Style.RESET_ALL}")
+            html_content = self.read_local_html()  # Read HTML content from local file
+            if not html_content:  # Verify if HTML reading failed
+                return None  # Return None if HTML is unavailable
+            self.html_content = html_content  # Store HTML content for later use
+            self.product_url = self.url  # Use the provided URL as product URL in offline mode
+        else:  # Online scraping mode
+            print(f"{BackgroundColors.GREEN}Using online mode with HTTP requests{Style.RESET_ALL}")
+            self.get_product_url()  # Step 1: Get the actual product URL
         
         product_info = self.scrape_product_info(verbose=VERBOSE)  # Step 2: Scrape product information
 
