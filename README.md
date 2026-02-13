@@ -430,3 +430,41 @@ When `GEMINI_API_KEY` is configured, the scraper automatically generates marketi
 - Automatically triggered after successful scrape
 - Validates and fixes formatting issues
 - Retries on failures with error logging
+
+## Dependencies
+
+The project uses the following production dependencies:
+
+**Core Libraries**:
+- `beautifulsoup4==4.14.3` - HTML parsing and extraction
+- `requests==2.32.5` - HTTP requests for web scraping
+- `lxml==5.3.0` - Fast XML/HTML parsing backend
+
+**Browser Automation**:
+- `playwright==1.49.1` - Headless browser automation framework
+- `pyee==12.0.0` - Event emitter for Playwright
+- `greenlet==3.1.1` - Asynchronous support for Playwright
+
+**Image Processing**:
+- `pillow==12.1.0` - Image processing and optimization
+
+**AI Integration**:
+- `google-genai==1.61.0` - Google Gemini API client
+- `google-auth==2.48.0` - Google authentication
+- `tenacity==9.1.2` - Retry logic for API calls
+
+**Utilities**:
+- `colorama==0.4.6` - Terminal color formatting
+- `python-dotenv==1.2.1` - Environment variable management
+
+**HTTP & Networking**:
+- `httpx==0.28.1` - Modern HTTP client
+- `httpcore==1.0.9` - Low-level HTTP transport
+- `urllib3==2.6.3` - HTTP connection pooling
+- `certifi==2026.1.4` - SSL certificate bundle
+
+**Data Validation**:
+- `pydantic==2.12.5` - Data validation using Python type hints
+- `pydantic_core==2.41.5` - Core validation logic
+
+For a complete list, see [requirements.txt](requirements.txt).
