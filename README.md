@@ -293,3 +293,14 @@ https://shopee.com.br/product-url ./Inputs/shopee-product/index.html
 ```
 
 The scraper automatically detects which format is provided and routes accordingly.
+
+### Batch Processing
+
+Process multiple products in sequence with automatic delay:
+
+```python
+# In main.py
+DELAY_BETWEEN_REQUESTS = 5  # Seconds between requests (default: 5)
+```
+
+The scraper processes all URLs in `Inputs/urls.txt` with rate limiting to avoid triggering anti-bot measures.
