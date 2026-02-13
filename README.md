@@ -352,3 +352,24 @@ Instead of storing credentials or automating logins, the scraper:
 3. Inherits authentication automatically from saved session cookies
 4. No credentials stored in code or configuration files
 5. Works with 2FA/MFA-enabled accounts
+
+### Setup Steps
+
+1. **Authenticate in Chrome** (One-time)
+   - Open Chrome normally
+   - Log into Shopee and Shein
+   - Verify access to product pages
+   - Close all Chrome windows
+
+2. **Configure Environment**
+   ```env
+   CHROME_PROFILE_PATH=C:/Users/YourUsername/AppData/Local/Google/Chrome/User Data
+   HEADLESS=False
+   ```
+
+3. **Run Scraper**
+   ```bash
+   python main.py
+   ```
+
+The browser will launch with your authenticated profile and scrape products automatically.
