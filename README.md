@@ -98,3 +98,11 @@ The scraper extracts detailed product data including names, prices, discount inf
 - **Error Recovery**: Robust exception handling with detailed error reporting
 - **Platform-Specific Output**: Organized directory structure with platform prefixes
 - **Product Validation**: Validates scraped data to filter out placeholder entries
+
+## Supported Platforms
+
+| Platform          | Scraping Method                 | Authentication Required | Status   |
+| ----------------- | ------------------------------- | ----------------------- | -------- |
+| **Mercado Livre** | HTTP Requests                   | No                      | ✅ Active |
+| **Shein**         | Browser Automation (Playwright) | Yes                     | ✅ Active |
+| **Shopee**        | Browser Automation (Playwright) | Yes                     | ✅ Active |
