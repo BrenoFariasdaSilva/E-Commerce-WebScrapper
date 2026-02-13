@@ -485,6 +485,47 @@ def detect_platform(url):
     return None  # Return None if platform not recognized
 
 
+def resolve_local_html_path(local_html_path):
+    """
+    Attempts to resolve a local HTML path by trying various common variations.
+    
+    Tries the following variations in order:
+    1. Path as provided
+    2. With ./Inputs/ prefix
+    3. With .zip suffix
+    4. With /index.html suffix
+    5. Combinations of prefix and suffixes
+    
+    :param local_html_path: The original path to resolve
+    :return: Resolved path if found, original path if not found
+    """
+    
+    if not local_html_path:  # If no path provided
+        return local_html_path  # Return as-is
+    
+    if verify_filepath_exists(local_html_path):  # If path exists as provided
+        return local_html_path  # Return original path
+    
+    prefixes = ["", "./Inputs/"]  # Empty prefix (already tried) and Inputs directory prefix
+    suffixes = ["", ".zip", "/index.html"]  # Empty suffix (already tried), zip extension, and index.html file
+    
+    for prefix in prefixes:  # Iterate through prefixes
+        for suffix in suffixes:  # Iterate through suffixes
+            if prefix == "" and suffix == "":  # If both prefix and suffix are empty
+                continue  # Skip this combination as it's the original path
+            
+            test_path = f"{prefix}{local_html_path}{suffix}"  # Construct test path with prefix and suffix
+            if verify_filepath_exists(test_path):  # If test path exists
+                verbose_output(  # Output resolution message
+                    f"{BackgroundColors.GREEN}Resolved local HTML path: {BackgroundColors.CYAN}{local_html_path}{BackgroundColors.GREEN} -> {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}"
+                )  # End of verbose output call
+                print(f"{BackgroundColors.GREEN}Resolved path variation: {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}")  # Inform user about resolution
+                return test_path  # Return resolved path
+    
+    print(f"{BackgroundColors.YELLOW}Warning: Could not resolve local HTML path: {BackgroundColors.CYAN}{local_html_path}{BackgroundColors.YELLOW}. File may not exist.{Style.RESET_ALL}")  # Warn user
+    return local_html_path  # Return original path even if not found
+
+
 def scrape_product(url, local_html_path=None):
     """
     Scrapes product information from a URL by detecting the platform and using the appropriate scraper.
@@ -947,6 +988,7 @@ def main():
         print(f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Processing URL {BackgroundColors.CYAN}{index}{BackgroundColors.GREEN}/{BackgroundColors.CYAN}{total_urls}{BackgroundColors.GREEN}: {BackgroundColors.CYAN}{url}{Style.RESET_ALL}") # Print section header
         
         if local_html_path:  # If a local HTML file path is provided
+            local_html_path = resolve_local_html_path(local_html_path)  # Resolve path with fallback variations
             print(f"{BackgroundColors.GREEN}Using local HTML file: {BackgroundColors.CYAN}{local_html_path}{Style.RESET_ALL}")  # Inform user about offline mode
         
         print(f"{BackgroundColors.CYAN}Step 1{BackgroundColors.GREEN}: Scraping the product information{Style.RESET_ALL}")  # Step 1: Scrape the product information
