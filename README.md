@@ -119,3 +119,15 @@ The application follows a modular, class-based architecture with clear separatio
 - **Shopee.py**: Browser automation scraper using `Playwright` for JavaScript-rendered pages
 - **Gemini.py**: AI integration module for generating marketing content via Google Gemini API
 - **Logger.py**: Custom logging utility for simultaneous terminal and file output
+
+### Workflow
+
+1. **URL Loading**: Reads URLs from `Inputs/urls.txt` or test constants
+2. **Platform Detection**: Analyzes URL patterns to determine the appropriate scraper
+3. **Path Resolution**: Resolves local HTML paths with fallback mechanisms for offline scraping
+4. **Scraping Execution**: Invokes platform-specific scraper with appropriate parameters
+5. **Data Validation**: Verifies product data completeness and authenticity
+6. **Asset Processing**: Downloads images, removes duplicates, excludes small files
+7. **Output Generation**: Creates organized directories with product descriptions
+8. **AI Enhancement**: Optionally generates marketing content via Gemini API
+9. **Cleanup**: Removes temporary files and extracted archives
