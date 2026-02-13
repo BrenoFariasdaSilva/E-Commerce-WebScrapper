@@ -80,6 +80,22 @@ class BackgroundColors:  # Colors for the terminal
 # Execution Constants:
 VERBOSE = False  # Set to True to output verbose messages
 
+# HTML Selectors Dictionary:
+HTML_SELECTORS = {
+    "product_name": {"class": "ui-pdp-title"},  # CSS selector for product name element
+    "current_price_container": {"class": re.compile(r"andes-money-amount.*andes-money-amount--superscript-36")},  # CSS selector for current price container with superscript-36
+    "current_price_fraction": {"class": "andes-money-amount__fraction"},  # CSS selector for current price integer part
+    "current_price_cents": {"class": "andes-money-amount__cents"},  # CSS selector for current price decimal part
+    "cents_superscript_36": {"class": "andes-money-amount__cents--superscript-36"},  # CSS selector for cents with superscript-36
+    "old_price_container": {"class": re.compile(r"andes-money-amount.*andes-money-amount--superscript-16")},  # CSS selector for old price container with superscript-16
+    "discount": {"class": re.compile(r"andes-money-amount__discount.*ui-pdp-family--SEMIBOLD.*ui-pdp-color--GREEN", re.IGNORECASE)},  # CSS selector for discount percentage element
+    "description": {"class": "ui-pdp-description__content"},  # CSS selector for product description content
+    "international_marker": {"id": "cbt_summary_rebranding--title"},  # ID selector for international product marker
+    "gallery_figure": {"class": "ui-pdp-gallery__figure__with-overlay"},  # CSS selector for gallery figure element
+    "gallery_image": {"class": "ui-pdp-gallery__figure__image"},  # CSS selector for gallery image element
+    "additional_image": {"class": "ui-pdp-image"},  # CSS selector for additional image element
+}  # Dictionary containing all HTML selectors used for scraping product information
+
 # Output Directory Constants:
 OUTPUT_DIRECTORY = "./Outputs/"  # The base path to the output directory
 
@@ -254,7 +270,7 @@ class MercadoLivre:
         :return: Product name string or "Unknown Product" if not found
         """
         
-        name_element = soup.find(class_="ui-pdp-title")  # Find the product name element
+        name_element = soup.find(**HTML_SELECTORS["product_name"])  # Find the product name element using centralized selector
         product_name = name_element.get_text(strip=True) if name_element else "Unknown Product"  # Extract the product name
         
         verbose_output(
@@ -265,14 +281,14 @@ class MercadoLivre:
 
     def detect_international(self, soup):
         """
-        Detect Mercado Livre "international" marker (id="cbt_summary_rebranding--title").
+        Detect Mercado Livre "international" marker using centralized selector.
 
         Returns True if the international marker is present, False otherwise.
         Also sets `self.product_data['is_international']` accordingly.
         """
         
         try:  # Try to detect the international marker
-            found = bool(soup.find(attrs={"id": "cbt_summary_rebranding--title"}))  # Verify for the presence of the international marker
+            found = bool(soup.find(attrs=HTML_SELECTORS["international_marker"]))  # Verify for the presence of the international marker using centralized selector
             self.product_data["is_international"] = True if found else False  # Set the product data flag
             return found  # Return the detection result
         except Exception:  # If any error occurs during detection, assume it's not international
@@ -307,19 +323,19 @@ class MercadoLivre:
         :return: Tuple of (integer_part, decimal_part) for current price
         """
         
-        current_price_container = soup.find("span", class_=re.compile(r"andes-money-amount.*andes-money-amount--superscript-36"))  # Find the current price with superscript-36 cents
+        current_price_container = soup.find("span", **HTML_SELECTORS["current_price_container"])  # Find the current price with superscript-36 cents using centralized selector
         if current_price_container and isinstance(current_price_container, Tag):  # If found
-            current_fraction = current_price_container.find(class_="andes-money-amount__fraction")  # Find the fraction within this container
-            current_cents = current_price_container.find(class_="andes-money-amount__cents")  # Find the cents within this container
+            current_fraction = current_price_container.find(**HTML_SELECTORS["current_price_fraction"])  # Find the fraction within this container using centralized selector
+            current_cents = current_price_container.find(**HTML_SELECTORS["current_price_cents"])  # Find the cents within this container using centralized selector
             
             integer_part = current_fraction.get_text(strip=True) if current_fraction and isinstance(current_fraction, Tag) else "0"  # Extract integer part
             decimal_part = current_cents.get_text(strip=True) if current_cents and isinstance(current_cents, Tag) else "00"  # Extract decimal part
         else:  # If not found
-            cents_element = soup.find(class_="andes-money-amount__cents--superscript-36")  # Find the cents with superscript-36
+            cents_element = soup.find(**HTML_SELECTORS["cents_superscript_36"])  # Find the cents with superscript-36 using centralized selector
             if cents_element and isinstance(cents_element, Tag):  # If found
                 parent = cents_element.find_parent(class_=re.compile(r"andes-money-amount"))  # Find the parent container
                 if parent and isinstance(parent, Tag):  # If parent found
-                    fraction = parent.find(class_="andes-money-amount__fraction")  # Find the fraction within this container
+                    fraction = parent.find(**HTML_SELECTORS["current_price_fraction"])  # Find the fraction within this container using centralized selector
                     integer_part = fraction.get_text(strip=True) if fraction and isinstance(fraction, Tag) else "0"  # Extract integer part
                     decimal_part = cents_element.get_text(strip=True)  # Extract decimal part
                 else:  # If parent not found
@@ -339,22 +355,22 @@ class MercadoLivre:
         :return: Tuple of (integer_part, decimal_part) for old price
         """
         
-        old_price_container = soup.find("span", class_=re.compile(r"andes-money-amount.*andes-money-amount--superscript-16"))  # Find the old price with superscript-16 cents
+        old_price_container = soup.find("span", **HTML_SELECTORS["old_price_container"])  # Find the old price with superscript-16 cents using centralized selector
         if old_price_container and isinstance(old_price_container, Tag):  # If found
-            old_fraction = old_price_container.find(class_="andes-money-amount__fraction")  # Find the fraction within this container
-            old_cents = old_price_container.find(class_="andes-money-amount__cents")  # Find the cents within this container
+            old_fraction = old_price_container.find(**HTML_SELECTORS["current_price_fraction"])  # Find the fraction within this container using centralized selector
+            old_cents = old_price_container.find(**HTML_SELECTORS["current_price_cents"])  # Find the cents within this container using centralized selector
             
             integer_part = old_fraction.get_text(strip=True) if old_fraction and isinstance(old_fraction, Tag) else "N/A"  # Extract integer part
             decimal_part = old_cents.get_text(strip=True) if old_cents and isinstance(old_cents, Tag) else "N/A"  # Extract decimal part
         else:  # If not found
-            all_prices = soup.find_all(class_="andes-money-amount__fraction")  # Find all price fractions
+            all_prices = soup.find_all(**HTML_SELECTORS["current_price_fraction"])  # Find all price fractions using centralized selector
             if len(all_prices) > 1:  # If more than one price found
                 first_fraction = all_prices[0]  # Assume the first is the old price
                 if isinstance(first_fraction, Tag):  # If it's a Tag
                     integer_part = first_fraction.get_text(strip=True)  # Extract integer part
                     parent = first_fraction.find_parent(class_=re.compile(r"andes-money-amount"))  # Find the parent container
                     if parent and isinstance(parent, Tag):  # If parent found
-                        cents = parent.find(class_="andes-money-amount__cents")  # Find the cents within this container
+                        cents = parent.find(**HTML_SELECTORS["current_price_cents"])  # Find the cents within this container using centralized selector
                         decimal_part = cents.get_text(strip=True) if cents and isinstance(cents, Tag) else "00"  # Extract decimal part
                     else:  # If parent not found
                         decimal_part = "00"  # Default decimal part
@@ -375,7 +391,7 @@ class MercadoLivre:
         :return: Discount percentage string or "N/A" if not found
         """
         
-        discount_element = soup.find(class_=re.compile(r"andes-money-amount__discount.*ui-pdp-family--SEMIBOLD.*ui-pdp-color--GREEN", re.IGNORECASE))  # Find discount element
+        discount_element = soup.find(**HTML_SELECTORS["discount"])  # Find discount element using centralized selector
         discount_percentage = discount_element.get_text(strip=True) if discount_element else "N/A"  # Extract discount percentage
         
         return discount_percentage  # Return the discount percentage
@@ -388,7 +404,7 @@ class MercadoLivre:
         :return: Product description string or "No description available" if not found
         """
         
-        description_element = soup.find(class_="ui-pdp-description__content")  # Find description title element
+        description_element = soup.find(**HTML_SELECTORS["description"])  # Find description title element using centralized selector
         description = description_element.get_text(strip=True) if description_element else "No description available"  # Extract description
         
         return description  # Return the description
@@ -615,14 +631,14 @@ class MercadoLivre:
         :return: List of valid image URLs
         """
         
-        figures = soup.find_all("figure", class_="ui-pdp-gallery__figure__with-overlay")  # Find figure elements
+        figures = soup.find_all("figure", **HTML_SELECTORS["gallery_figure"])  # Find figure elements using centralized selector
         image_urls = []  # List to store image URLs
         
         for figure in figures:  # Iterate through figures
             if not isinstance(figure, Tag):  # If not a Tag
                 continue  # Skip
             
-            img = figure.find("img", class_="ui-pdp-gallery__figure__image")  # Find image
+            img = figure.find("img", **HTML_SELECTORS["gallery_image"])  # Find image using centralized selector
             
             if isinstance(img, Tag):  # If image found
                 img_url = img.get("data-zoom") or img.get("src")  # Get URL
@@ -631,7 +647,7 @@ class MercadoLivre:
                     if not img_url.startswith("data:") and not img_url.startswith("blob:"):  # Skip invalid URLs
                         image_urls.append(img_url)  # Add to list
         
-        additional_imgs = soup.find_all("img", class_="ui-pdp-image")  # Find additional image elements
+        additional_imgs = soup.find_all("img", **HTML_SELECTORS["additional_image"])  # Find additional image elements using centralized selector
         for img in additional_imgs:  # Iterate through additional images
             if isinstance(img, Tag):  # If it's a Tag
                 img_url = img.get("data-zoom") or img.get("src")  # Get URL
