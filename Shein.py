@@ -317,7 +317,8 @@ def main():
         f"{BackgroundColors.CLEAR_TERMINAL}{BackgroundColors.BOLD}{BackgroundColors.GREEN}Welcome to the {BackgroundColors.CYAN}Shein Scraper{BackgroundColors.GREEN} program!{Style.RESET_ALL}",
         end="\n",
     )
-    start_time = datetime.datetime.now()
+    
+    start_time = datetime.datetime.now()  # Record the start time of the program execution
 
     test_url = "https://br.shein.com/product-example"  # Test URL
     
@@ -325,14 +326,14 @@ def main():
         f"{BackgroundColors.GREEN}Testing Shein scraper with URL: {BackgroundColors.CYAN}{test_url}{Style.RESET_ALL}\n"
     )
     
-    try:
-        scraper = Shein(test_url)
-        result = scraper.scrape()
-        output_result(result)
-    except Exception as e:
+    try:  # Attempt to run scraper with error handling to catch any exceptions during the test
+        scraper = Shein(test_url)  # Create instance of Shein scraper with test URL
+        result = scraper.scrape()  # Run the scraping process and store the result
+        output_result(result)  # Output the scraping result to the terminal
+    except Exception as e:  # Catch any exceptions that occur during the scraping test
         print(f"{BackgroundColors.RED}Error during test: {e}{Style.RESET_ALL}")
 
-    finish_time = datetime.datetime.now()
+    finish_time = datetime.datetime.now()  # Record the finish time of the program execution
     print(
         f"{BackgroundColors.GREEN}Start time: {BackgroundColors.CYAN}{start_time.strftime('%d/%m/%Y - %H:%M:%S')}\n{BackgroundColors.GREEN}Finish time: {BackgroundColors.CYAN}{finish_time.strftime('%d/%m/%Y - %H:%M:%S')}\n{BackgroundColors.GREEN}Execution time: {BackgroundColors.CYAN}{calculate_execution_time(start_time, finish_time)}{Style.RESET_ALL}"
     )
