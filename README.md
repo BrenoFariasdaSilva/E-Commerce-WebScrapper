@@ -194,3 +194,42 @@ Content Extraction
 5. **Configure Environment Variables**
 
    Create a `.env` file in the project root (see [Configuration](#configuration) section).
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file in the project root directory:
+
+```env
+# AI Integration (Optional - for marketing content generation)
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Browser Authentication (Required for Shopee and Shein)
+CHROME_PROFILE_PATH=C:/Users/YourUsername/AppData/Local/Google/Chrome/User Data
+CHROME_EXECUTABLE_PATH=
+HEADLESS=False
+```
+
+#### Variable Descriptions
+
+**GEMINI_API_KEY** (Optional)
+- Google Gemini API key for AI-powered marketing content generation
+- Obtain from: https://makersuite.google.com/app/apikey
+- Leave empty to skip AI content generation
+
+**CHROME_PROFILE_PATH** (Required for Shopee/Shein)
+- Path to your Chrome user data directory with authenticated sessions
+- **Windows**: `C:/Users/YourUsername/AppData/Local/Google/Chrome/User Data`
+- **macOS**: `/Users/YourUsername/Library/Application Support/Google/Chrome`
+- **Linux**: `/home/YourUsername/.config/google-chrome`
+- ⚠️ Use forward slashes `/` even on Windows
+- ⚠️ Close all Chrome windows before running the scraper
+
+**CHROME_EXECUTABLE_PATH** (Optional)
+- Path to Chrome executable if not in default location
+- Leave empty if Chrome is installed in the standard location
+
+**HEADLESS** (Optional)
+- `False`: Show browser window (recommended for debugging)
+- `True`: Run browser in background without window
