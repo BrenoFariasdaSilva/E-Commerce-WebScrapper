@@ -366,7 +366,7 @@ class Shein:
         for tag, attrs in HTML_SELECTORS["product_name"]:  # Iterate through each selector combination from centralized dictionary
             name_element = soup.find(tag, attrs if attrs else None)  # Search for element matching current selector
             if name_element:  # Verify if matching element was found
-                product_name = name_element.get_text(strip=True)  # Extract and clean text content from element
+                product_name = name_element.get_text(strip=True).title()  # Extract, clean, and capitalize text content from element
                 if product_name and product_name != "":  # Validate that extracted name is not empty
                     verbose_output(f"{BackgroundColors.GREEN}Product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}")  # Log successfully extracted product name
                     return product_name  # Return the product name immediately when found
@@ -534,7 +534,6 @@ class Shein:
 
         verbose_output(f"{BackgroundColors.GREEN}Collecting page assets...{Style.RESET_ALL}")
         if self.page is None:  # Validate that page instance exists before collecting assets
-            print(f"{BackgroundColors.YELLOW}Warning: Page not initialized, skipping asset collection.{Style.RESET_ALL}")  # Warn user that asset collection will be skipped
             return {}  # Return empty dictionary when page is not available
         assets_dir = os.path.join(output_dir, "assets")  # Construct path for assets subdirectory
         self.create_directory(assets_dir, "assets")  # Create assets subdirectory
