@@ -246,7 +246,42 @@ class Shopee:
                 f"{BackgroundColors.GREEN}Browser closed successfully.{Style.RESET_ALL}"
             )  # End of verbose output call
         except Exception as e:  # Catch any exceptions during browser close
-            print(f"{BackgroundColors.YELLOW}Warning during browser close: {e}{Style.RESET_ALL}")  # Warn user about close issues without failing# Functions Definitions:
+            print(f"{BackgroundColors.YELLOW}Warning during browser close: {e}{Style.RESET_ALL}")  # Warn user about close issues without failing
+
+
+    def _load_page(self) -> bool:
+        """
+        Loads the product page and waits for network idle.
+
+        :return: True if successful, False otherwise
+        """
+
+        verbose_output(  # Output status message to user
+            f"{BackgroundColors.GREEN}Loading page: {BackgroundColors.CYAN}{self.product_url}{Style.RESET_ALL}"
+        )  # End of verbose output call
+
+        if self.page is None:  # Validate that page instance exists before attempting to load
+            print(f"{BackgroundColors.RED}Page instance not initialized.{Style.RESET_ALL}")  # Alert user that page is not ready
+            return False  # Return failure status if page is not initialized
+
+        try:  # Attempt page loading with error handling
+            # Navigate to the URL
+            self.page.goto(self.product_url, timeout=PAGE_LOAD_TIMEOUT, wait_until="domcontentloaded")  # Navigate to product URL and wait for DOM to load
+            
+            # Wait for network to be idle
+            self.page.wait_for_load_state("networkidle", timeout=NETWORK_IDLE_TIMEOUT)  # Wait for network to become idle indicating page is loaded
+            
+            verbose_output(  # Output success message to user
+                f"{BackgroundColors.GREEN}Page loaded successfully.{Style.RESET_ALL}"
+            )  # End of verbose output call
+            return True  # Return success status after successful page load
+
+        except PlaywrightTimeoutError:  # Handle timeout errors specifically
+            print(f"{BackgroundColors.YELLOW}Page load timeout, continuing anyway...{Style.RESET_ALL}")  # Warn user about timeout but continue execution
+            return True  # Return success despite timeout to allow scraping partial content
+        except Exception as e:  # Catch any other exceptions during page loading
+            print(f"{BackgroundColors.RED}Failed to load page: {e}{Style.RESET_ALL}")  # Alert user about page loading failure
+            return False  # Return failure status for unhandled errors# Functions Definitions:
 
 
 def verbose_output(true_string="", false_string=""):
