@@ -555,3 +555,27 @@ This ensures maximum user convenience when specifying local HTML paths.
 - Downloads images, CSS, JavaScript files
 - Rewrites URLs to use local paths
 - Saves complete page snapshot with dependencies
+
+## Troubleshooting
+
+**Issue**: `Unable to open user data directory`
+- **Cause**: Chrome is already running with the same profile
+- **Solution**: Close all Chrome windows and check Task Manager for lingering chrome.exe processes
+
+**Issue**: `No product data extracted`
+- **Cause**: Not logged in, website structure changed, or anti-bot detection
+- **Solution**: Verify login status in Chrome, try with `HEADLESS=False`, check logs for selector errors
+
+**Issue**: `playwright._impl._api_types.Error: Executable doesn't exist`
+- **Cause**: Playwright browsers not installed
+- **Solution**: Run `python -m playwright install chromium`
+
+**Issue**: `Could not resolve local HTML path`
+- **Cause**: Local HTML file or directory not found
+- **Solution**: Verify file paths, ensure `./Inputs/` prefix is correct, check zip file integrity
+
+**Issue**: `Rate limiting or IP blocking`
+- **Cause**: Too many requests in short time
+- **Solution**: Increase `DELAY_BETWEEN_REQUESTS` in main.py, use VPN if necessary
+
+For more detailed troubleshooting, see [AUTHENTICATED_SCRAPING_SETUP.md](AUTHENTICATED_SCRAPING_SETUP.md).
