@@ -92,29 +92,29 @@ VERBOSE = False  # Set to True to output verbose messages
 # HTML Selectors Dictionary:
 HTML_SELECTORS = {
     "product_name": [  # List of CSS selectors for product name in priority order
-        ("h1", {"class": re.compile(r".*product.*title.*", re.IGNORECASE)}),  # Shein product title heading with regex pattern
-        ("h1", {}),  # Generic H1 heading as fallback
-        ("div", {"class": re.compile(r".*product.*name.*", re.IGNORECASE)}),  # Product name div container with regex pattern
+        ("h1", {"class": "fsp-element"}),  # Shein product name heading with specific class
+        ("h1", {"class": re.compile(r".*product.*title.*", re.IGNORECASE)}),  # Generic product title pattern fallback
+        ("h1", {}),  # Generic H1 heading as last resort fallback
     ],
     "current_price": [  # List of CSS selectors for current price in priority order
-        ("div", {"class": re.compile(r".*price.*sale.*", re.IGNORECASE)}),  # Shein sale price container with regex pattern
-        ("span", {"class": re.compile(r".*price.*current.*", re.IGNORECASE)}),  # Alternative current price span with regex pattern
-        ("div", {"class": re.compile(r".*price.*", re.IGNORECASE)}),  # Generic price div as fallback
+        ("div", {"class": "productPrice__main"}),  # Shein current price container with specific class
+        ("span", {"class": re.compile(r".*price.*current.*", re.IGNORECASE)}),  # Generic current price pattern fallback
+        ("div", {"class": re.compile(r".*price.*", re.IGNORECASE)}),  # Generic price div as last resort fallback
     ],
     "old_price": [  # List of CSS selectors for old price in priority order
-        ("span", {"class": re.compile(r".*price.*original.*", re.IGNORECASE)}),  # Shein original price span with regex pattern
-        ("del", {}),  # Deleted text element for old price
-        ("div", {"class": re.compile(r".*old.*price.*", re.IGNORECASE)}),  # Old price div container as fallback
+        ("div", {"class": "productDiscountInfo__retail"}),  # Shein old price container with specific class
+        ("span", {"class": re.compile(r".*price.*original.*", re.IGNORECASE)}),  # Generic original price pattern fallback
+        ("del", {}),  # Deleted text element for old price as last resort fallback
     ],
     "discount": [  # List of CSS selectors for discount percentage in priority order
-        ("span", {"class": re.compile(r".*discount.*", re.IGNORECASE)}),  # Shein discount span with regex pattern
-        ("div", {"class": re.compile(r".*save.*", re.IGNORECASE)}),  # Alternative save indicator with regex pattern
-        ("span", {"class": re.compile(r".*percent.*", re.IGNORECASE)}),  # Percentage span as fallback
+        ("div", {"class": "productDiscountPercent"}),  # Shein discount percentage container with specific class
+        ("span", {"class": re.compile(r".*discount.*", re.IGNORECASE)}),  # Generic discount span fallback
+        ("span", {"class": re.compile(r".*percent.*", re.IGNORECASE)}),  # Percentage span as last resort fallback
     ],
     "description": [  # List of CSS selectors for product description in priority order
-        ("div", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Shein description container with regex pattern
-        ("div", {"class": re.compile(r".*detail.*", re.IGNORECASE)}),  # Alternative detail container with regex pattern
-        ("p", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Paragraph element containing description as fallback
+        ("div", {"class": "product-intro__attr-list-text"}),  # Shein description container with specific class
+        ("div", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Generic description pattern fallback
+        ("p", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Paragraph element containing description as last resort fallback
     ],
 }  # Dictionary containing all HTML selectors used for scraping product information
 
