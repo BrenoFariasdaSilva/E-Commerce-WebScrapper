@@ -519,7 +519,7 @@ class Shein:
         :return: Path to the created output directory
         """
 
-        output_dir = os.path.join(OUTPUT_DIRECTORY, product_name_safe)  # Construct full path for product output directory
+        output_dir = os.path.join(OUTPUT_DIRECTORY, f"Shein - {product_name_safe}")  # Construct full path for product output directory with website prefix
         self.create_directory(os.path.abspath(output_dir), output_dir.replace(".", ""))  # Create directory with absolute path and cleaned relative name
         return output_dir  # Return the created output directory path
 
