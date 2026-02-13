@@ -138,21 +138,26 @@ class Shein:
     :return: None
     """
 
-    def __init__(self, url=""):
+    def __init__(self, url="", local_html_path=None):
         """
-        Initializes the Shein scraper with a product URL.
+        Initializes the Shein scraper with a product URL and optional local HTML file path.
 
         :param url: The URL of the Shein product page to scrape
+        :param local_html_path: Optional path to a local HTML file for offline scraping
         :return: None
         """
 
         self.url = url  # Store the URL of the product page to be scraped
         self.product_url = url  # Maintain separate copy of product URL for reference
+        self.local_html_path = local_html_path  # Store path to local HTML file for offline scraping
+        self.html_content = None  # Store HTML content for reuse (from browser or local file)
         self.product_data = {}  # Initialize empty dictionary to store extracted product data
         self.playwright = None  # Placeholder for Playwright instance
         self.browser = None  # Placeholder for browser instance
         self.page = None  # Placeholder for page object
         verbose_output(f"{BackgroundColors.GREEN}Shein scraper initialized with URL: {BackgroundColors.CYAN}{url}{Style.RESET_ALL}")
+        if local_html_path:  # If local HTML file path is provided
+            verbose_output(f"{BackgroundColors.GREEN}Offline mode enabled. Will read from: {BackgroundColors.CYAN}{local_html_path}{Style.RESET_ALL}")
 
     def launch_browser(self):
         """
@@ -295,6 +300,29 @@ class Shein:
         except Exception as e:  # Catch any exceptions during HTML extraction
             print(f"{BackgroundColors.RED}Failed to extract HTML: {e}{Style.RESET_ALL}")  # Alert user about extraction failure
             return None  # Return None to indicate extraction failed
+
+    def read_local_html(self):
+        """
+        Reads HTML content from a local file for offline scraping.
+
+        :return: HTML content string or None if failed
+        """
+
+        verbose_output(f"{BackgroundColors.GREEN}Reading local HTML file: {BackgroundColors.CYAN}{self.local_html_path}{Style.RESET_ALL}")
+        try:  # Attempt to read file with error handling
+            if not self.local_html_path:  # Verify if local HTML path is not set
+                print(f"{BackgroundColors.RED}No local HTML path provided.{Style.RESET_ALL}")  # Alert user that path is missing
+                return None  # Return None if path doesn't exist
+            if not os.path.exists(self.local_html_path):  # Verify if file doesn't exist
+                print(f"{BackgroundColors.RED}Local HTML file not found: {BackgroundColors.CYAN}{self.local_html_path}{Style.RESET_ALL}")  # Alert user that file is missing
+                return None  # Return None if file doesn't exist
+            with open(self.local_html_path, "r", encoding="utf-8") as file:  # Open file with UTF-8 encoding
+                html_content = file.read()  # Read entire file content
+            verbose_output(f"{BackgroundColors.GREEN}Local HTML content loaded successfully.{Style.RESET_ALL}")
+            return html_content  # Return the HTML content string
+        except Exception as e:  # Catch any exceptions during file reading
+            print(f"{BackgroundColors.RED}Error reading local HTML file: {e}{Style.RESET_ALL}")  # Alert user about file reading error
+            return None  # Return None to indicate reading failed
 
     def extract_product_name(self, soup=None):
         """
@@ -572,7 +600,8 @@ class Shein:
 
     def download_media(self):
         """
-        Downloads product media and creates snapshot after browser automation.
+        Downloads product media and creates snapshot.
+        Works for both online (browser) and offline (local HTML) modes.
 
         :return: List of downloaded file paths
         """
@@ -586,9 +615,9 @@ class Shein:
             product_name = self.product_data.get("name", "Unknown Product")  # Get product name or use default
             product_name_safe = "".join(c if c.isalnum() or c in (" ", "-", "_") else "" for c in product_name).strip()  # Sanitize product name for filesystem use
             output_dir = self.create_output_directory(product_name_safe)  # Create output directory for product
-            html_content = self.get_rendered_html()  # Get fully rendered HTML content
-            if not html_content:  # Verify if HTML content retrieval failed
-                print(f"{BackgroundColors.RED}Failed to get rendered HTML.{Style.RESET_ALL}")  # Alert user about HTML retrieval failure
+            html_content = self.html_content  # Use stored HTML content (from browser or local file)
+            if not html_content:  # Verify if HTML content is unavailable
+                print(f"{BackgroundColors.RED}No HTML content available.{Style.RESET_ALL}")  # Alert user about HTML unavailability
                 return downloaded_files  # Return empty list when HTML is unavailable
             asset_map = self.collect_assets(html_content, output_dir)  # Download and collect all page assets
             snapshot_path = self.save_snapshot(html_content, output_dir, asset_map)  # Save HTML snapshot with localized assets
@@ -605,6 +634,7 @@ class Shein:
     def scrape(self, verbose=False):
         """
         Main scraping method that orchestrates the entire scraping process.
+        Supports both online scraping (via browser) and offline scraping (from local HTML file).
 
         :param verbose: Boolean flag to enable verbose output
         :return: Dictionary containing all scraped data and downloaded file paths
@@ -612,14 +642,23 @@ class Shein:
 
         print(f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Starting {BackgroundColors.CYAN}Shein{BackgroundColors.GREEN} Scraping process...{Style.RESET_ALL}")
         try:  # Attempt scraping process with error handling
-            self.launch_browser()  # Initialize and launch browser instance
-            if not self.load_page():  # Attempt to load product page
-                return None  # Return None if page loading failed
-            self.wait_full_render()  # Wait for page to fully render with dynamic content
-            self.auto_scroll()  # Scroll page to trigger lazy-loaded content
-            html_content = self.get_rendered_html()  # Extract fully rendered HTML content
-            if not html_content:  # Verify if HTML extraction failed
-                return None  # Return None if HTML is unavailable
+            if self.local_html_path:  # If local HTML file path is provided
+                print(f"{BackgroundColors.GREEN}Using offline mode with local HTML file{Style.RESET_ALL}")
+                html_content = self.read_local_html()  # Read HTML content from local file
+                if not html_content:  # Verify if HTML reading failed
+                    return None  # Return None if HTML is unavailable
+                self.html_content = html_content  # Store HTML content for later use
+            else:  # Online scraping mode
+                print(f"{BackgroundColors.GREEN}Using online mode with browser automation{Style.RESET_ALL}")
+                self.launch_browser()  # Initialize and launch browser instance
+                if not self.load_page():  # Attempt to load product page
+                    return None  # Return None if page loading failed
+                self.wait_full_render()  # Wait for page to fully render with dynamic content
+                self.auto_scroll()  # Scroll page to trigger lazy-loaded content
+                html_content = self.get_rendered_html()  # Extract fully rendered HTML content
+                if not html_content:  # Verify if HTML extraction failed
+                    return None  # Return None if HTML is unavailable
+                self.html_content = html_content  # Store HTML content for later use
             product_info = self.scrape_product_info(html_content)  # Parse and extract product information
             if not product_info:  # Verify if product info extraction failed
                 return None  # Return None if extraction failed
@@ -631,7 +670,8 @@ class Shein:
             print(f"{BackgroundColors.RED}Scraping failed: {e}{Style.RESET_ALL}")  # Alert user about scraping failure
             return None  # Return None to indicate scraping failed
         finally:  # Always execute cleanup regardless of success or failure
-            self.close_browser()  # Close browser and release resources
+            if not self.local_html_path:  # Only close browser in online mode
+                self.close_browser()  # Close browser and release resources
 
 
 # Functions Definitions:
