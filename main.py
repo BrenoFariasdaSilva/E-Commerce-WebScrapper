@@ -61,6 +61,7 @@ import platform  # For getting the operating system name
 import shutil  # For removing directories
 import sys  # For system-specific parameters and functions
 import time  # For adding delays between requests
+import zipfile  # For handling zip files
 # from AliExpress import AliExpress  # Import the AliExpress class
 from colorama import Style  # For coloring the terminal
 from dotenv import load_dotenv  # For loading environment variables
@@ -490,6 +491,31 @@ def scrape_product(url, local_html_path=None):
         print(f"{BackgroundColors.RED}Unsupported platform. Skipping URL: {url}{Style.RESET_ALL}")
         return None, None, None
     
+    extracted_dir = None  # Directory where zip is extracted
+    zip_path = None  # Path to the zip file for cleanup
+    html_path = local_html_path  # Default to local_html_path
+    
+    if local_html_path and local_html_path.lower().endswith('.zip'):  # If a local HTML path is provided and it is a zip file, extract it
+        zip_path = local_html_path  # Store the zip path for later cleanup
+        zip_dir = os.path.dirname(zip_path)  # Get the directory of the zip file
+        zip_name = os.path.basename(zip_path)  # Get the name of the zip file
+        extract_name = zip_name.rsplit('.', 1)[0]  # Remove .zip extension
+        extracted_dir = os.path.join(zip_dir, extract_name)  # Directory to extract the zip contents into
+        
+        try:  # Try to extract the zip file
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:  # Open the zip file for reading
+                zip_ref.extractall(extracted_dir)  # Extract the contents to the extracted_dir
+            html_path = os.path.join(extracted_dir, 'index.html')  # Assume the main HTML file is named index.html in the extracted directory
+            if not os.path.exists(html_path):  # Verify if the expected HTML file exists after extraction
+                print(f"{BackgroundColors.RED}Error: index.html not found in extracted directory {extracted_dir}{Style.RESET_ALL}")
+                shutil.rmtree(extracted_dir)  # Clean up the extracted directory if the expected HTML file is not found
+                return None, None, None  # Return None values if extraction failed or expected file not found
+        except Exception as e:  # If an error occurs during extraction
+            print(f"{BackgroundColors.RED}Error extracting zip {zip_path}: {e}{Style.RESET_ALL}")
+            if os.path.exists(extracted_dir):  # If the extracted directory was created before the error, attempt to clean it up
+                shutil.rmtree(extracted_dir)  # Clean up the extracted directory if extraction failed
+            return None, None, None  # Return None values if extraction failed
+    
     scraper_classes = {  # Mapping of platform identifiers to scraper classes
         # "aliexpress": AliExpress,
         "mercadolivre": MercadoLivre,
@@ -504,7 +530,7 @@ def scrape_product(url, local_html_path=None):
         return None, None, None  # Return None values
     
     try:  # Try to scrape the product
-        scraper = scraper_class(url, local_html_path=local_html_path)  # Create scraper instance with optional local HTML path
+        scraper = scraper_class(url, local_html_path=html_path)  # Create scraper instance with optional local HTML path
         product_data = scraper.scrape()  # Scrape the product
         
         if not product_data:  # If scraping failed
@@ -517,6 +543,15 @@ def scrape_product(url, local_html_path=None):
         if not verify_filepath_exists(description_file):  # If description file not found
             print(f"{BackgroundColors.RED}Description file not found: {description_file}{Style.RESET_ALL}")
             return None, None, None  # Return None values
+        
+        # Clean up zip and extracted directory if extraction was performed
+        if extracted_dir:
+            try:
+                os.remove(zip_path)
+                shutil.rmtree(extracted_dir)
+                verbose_output(f"{BackgroundColors.GREEN}Cleaned up zip file and extracted directory{Style.RESET_ALL}")
+            except Exception as e:
+                print(f"{BackgroundColors.YELLOW}Warning: Failed to clean up zip and extracted dir: {e}{Style.RESET_ALL}")
         
         return product_data, description_file, product_name_safe  # Return scraped data and file paths
         
