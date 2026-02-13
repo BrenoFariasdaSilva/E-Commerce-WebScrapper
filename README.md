@@ -541,3 +541,17 @@ This ensures maximum user convenience when specifying local HTML paths.
 - Removes images smaller than 2KB (configurable)
 - Filters out thumbnails and placeholder images
 - Ensures only high-quality images are retained
+
+### Browser Automation
+
+**Playwright Configuration**:
+- Uses existing Chrome profile for authentication
+- Waits for network idle before extraction
+- Auto-scrolls to trigger lazy-loaded content
+- Captures complete page snapshots with assets
+- Localizes external resources for offline viewing
+
+**Asset Collection**:
+- Downloads images, CSS, JavaScript files
+- Rewrites URLs to use local paths
+- Saves complete page snapshot with dependencies
