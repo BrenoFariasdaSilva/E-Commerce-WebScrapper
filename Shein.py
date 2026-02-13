@@ -137,12 +137,24 @@ class Shein:
 
     :return: None
     """
-    def __init__(self, url=""):
 
+    def __init__(self, url=""):
+        """
+        Initializes the Shein scraper with a product URL.
+
+        :param url: The URL of the Shein product page to scrape
+        :return: None
+        """
+
+        self.url = url  # Store the URL of the product page to be scraped
+        self.product_url = url  # Maintain separate copy of product URL for reference
+        self.product_data = {}  # Initialize empty dictionary to store extracted product data
+        self.playwright = None  # Placeholder for Playwright instance
+        self.browser = None  # Placeholder for browser instance
+        self.page = None  # Placeholder for page object
+        verbose_output(f"{BackgroundColors.GREEN}Shein scraper initialized with URL: {BackgroundColors.CYAN}{url}{Style.RESET_ALL}")
 
     def launch_browser(self):
-
-
         """
         Launches an authenticated Chrome browser using existing profile.
 
