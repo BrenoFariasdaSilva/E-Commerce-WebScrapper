@@ -495,6 +495,11 @@ def resolve_local_html_path(local_html_path):
     3. With .zip suffix
     4. With /index.html suffix
     5. Combinations of prefix and suffixes
+    6. If path ends with .html, try the base directory (without HTML filename):
+       - As directory (reconstructing the full HTML path)
+       - With ./Inputs/ prefix as directory
+       - With .zip suffix
+       - With ./Inputs/ prefix and .zip suffix
     
     :param local_html_path: The original path to resolve
     :return: Resolved path if found, original path if not found
@@ -504,6 +509,7 @@ def resolve_local_html_path(local_html_path):
         return local_html_path  # Return as-is
     
     if verify_filepath_exists(local_html_path):  # If path exists as provided
+        print(f"{BackgroundColors.GREEN}Resolved local HTML path: {BackgroundColors.CYAN}{local_html_path}{Style.RESET_ALL}")  # Confirm resolution
         return local_html_path  # Return original path
     
     prefixes = ["", "./Inputs/"]  # Empty prefix (already tried) and Inputs directory prefix
@@ -521,6 +527,38 @@ def resolve_local_html_path(local_html_path):
                 )  # End of verbose output call
                 print(f"{BackgroundColors.GREEN}Resolved path variation: {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}")  # Inform user about resolution
                 return test_path  # Return resolved path
+    
+    # If path ends with .html, the HTML file might not exist but the base directory or zip might
+    if local_html_path.lower().endswith('.html'):  # Check if path ends with .html extension
+        # Extract the base path by removing the /filename.html portion
+        last_slash_idx = local_html_path.rfind('/')  # Find the last slash in the path
+        if last_slash_idx != -1:  # If there's a slash, we can extract base path
+            base_path = local_html_path[:last_slash_idx]  # Remove /filename.html to get base directory path
+            html_filename = local_html_path[last_slash_idx + 1:]  # Extract the HTML filename for reconstruction
+            
+            verbose_output(  # Output verbose message about base path resolution attempt
+                f"{BackgroundColors.YELLOW}HTML file not found. Attempting to resolve base path: {BackgroundColors.CYAN}{base_path}{Style.RESET_ALL}"
+            )  # End of verbose output call
+            
+            # Try the base path as a directory or zip file
+            base_variations = [  # List of base path variations to try
+                base_path,  # Try as directory
+                f"./Inputs/{base_path}",  # Try with Inputs prefix as directory
+                f"{base_path}.zip",  # Try as zip file
+                f"./Inputs/{base_path}.zip",  # Try with Inputs prefix as zip file
+            ]  # End of base variations list
+            
+            for test_path in base_variations:  # Iterate through base path variations
+                if verify_filepath_exists(test_path):  # If base path variation exists
+                    # If it's a directory, construct the resolved HTML path
+                    if os.path.isdir(test_path):  # Check if it's a directory
+                        resolved_html_path = os.path.join(test_path, html_filename)  # Reconstruct full HTML file path
+                        print(f"{BackgroundColors.GREEN}Resolved base directory: {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}")  # Inform about directory resolution
+                        print(f"{BackgroundColors.GREEN}Using HTML file: {BackgroundColors.CYAN}{resolved_html_path}{Style.RESET_ALL}")  # Inform about HTML file path
+                        return resolved_html_path  # Return reconstructed HTML path
+                    else:  # It's a zip file
+                        print(f"{BackgroundColors.GREEN}Resolved base path to zip file: {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}")  # Inform about zip resolution
+                        return test_path  # Return zip file path
     
     print(f"{BackgroundColors.YELLOW}Warning: Could not resolve local HTML path: {BackgroundColors.CYAN}{local_html_path}{BackgroundColors.YELLOW}. File may not exist.{Style.RESET_ALL}")  # Warn user
     return local_html_path  # Return original path even if not found
