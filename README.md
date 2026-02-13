@@ -247,3 +247,33 @@ For Shopee and Shein scraping, you must authenticate once in your regular Chrome
 7. Run the scraper - it will automatically use your saved sessions
 
 The scraper will reuse your authenticated session without requiring credentials in the code.
+
+## Usage
+
+### Basic Usage
+
+1. **Add URLs to Input File**
+
+   Edit `Inputs/urls.txt` and add one URL per line:
+
+   ```
+   https://mercadolivre.com.br/product-url
+   https://br.shein.com/product-url
+   https://shopee.com.br/product-url
+   ```
+
+2. **Run the Scraper**
+
+   ```bash
+   python main.py
+   ```
+
+   Or using Make:
+
+   ```bash
+   make run
+   ```
+
+3. **Check Outputs**
+
+   Results are saved in `Outputs/` directory organized by platform and product name.
