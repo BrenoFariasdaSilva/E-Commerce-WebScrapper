@@ -597,3 +597,29 @@ For more detailed troubleshooting, see [AUTHENTICATED_SCRAPING_SETUP.md](AUTHENT
 - Use `HEADLESS=True` for production runs
 - Increase `DELAY_BETWEEN_REQUESTS` to avoid rate limiting
 - Consider parallel execution for independent URLs (not implemented)
+
+## Ethical Considerations
+
+**Respect Website Policies**:
+- Review and comply with each platform's Terms of Service
+- Respect `robots.txt` directives
+- Implement appropriate rate limiting
+- Do not overload servers with excessive requests
+
+**Data Usage**:
+- Scraped data is for personal analysis and monitoring
+- Do not republish copyrighted content without permission
+- Respect intellectual property rights
+- Use product information ethically and legally
+
+**Authentication**:
+- Only scrape content you have legitimate access to
+- Do not share or expose authentication credentials
+- Do not circumvent security measures
+- Use authenticated scraping responsibly
+
+**Anti-Bot Measures**:
+- The scraper mimics normal user behavior
+- Uses authenticated sessions to avoid detection
+- Implements delays between requests
+- Does not attempt to bypass CAPTCHAs or security challenges
