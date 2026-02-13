@@ -527,7 +527,35 @@ class Shopee:
                     )  # End of verbose output call
                     return match.group(1)  # Return the discount percentage string
         
-        return "N/A"  # Return N/A when discount is not available# Functions Definitions:
+        return "N/A"  # Return N/A when discount is not available
+
+
+    def extract_product_description(self, soup: BeautifulSoup) -> str:
+        """
+        Extracts the product description from the parsed HTML soup.
+        
+        :param soup: BeautifulSoup object containing the parsed HTML
+        :return: Product description string or "No description available" if not found
+        """
+        
+        # Try multiple selectors for Shopee descriptions
+        description_selectors = [  # Define list of CSS selectors to find product description in priority order
+            ("div", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Shopee description container with regex pattern
+            ("div", {"class": re.compile(r".*product.*detail.*", re.IGNORECASE)}),  # Alternative product detail container with regex pattern
+            ("section", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Section element containing description as fallback
+        ]  # End of description_selectors list
+        
+        for tag, attrs in description_selectors:  # Iterate through each selector combination
+            description_element = soup.find(tag, attrs if attrs else None)  # type: ignore[arg-type]  # Search for element matching current selector
+            if description_element:  # Verify if matching element was found
+                description = description_element.get_text(strip=True)  # Extract and clean text content from element
+                if description and len(description) > 10:  # Validate that description has substantial content
+                    verbose_output(  # Log successfully extracted description with character count
+                        f"{BackgroundColors.GREEN}Description found ({len(description)} chars).{Style.RESET_ALL}"
+                    )  # End of verbose output call
+                    return description  # Return the product description
+        
+        return "No description available"  # Return default message when description is not found# Functions Definitions:
 
 
 def verbose_output(true_string="", false_string=""):
