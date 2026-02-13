@@ -90,6 +90,35 @@ class BackgroundColors:  # Colors for the terminal
 # Execution Constants:
 VERBOSE = False  # Set to True to output verbose messages
 
+# HTML Selectors Dictionary:
+HTML_SELECTORS = {
+    "product_name": [  # List of CSS selectors for product name in priority order
+        ("div", {"class": re.compile(r".*product.*name.*", re.IGNORECASE)}),  # Shopee product name container with regex pattern
+        ("span", {"class": re.compile(r".*product.*title.*", re.IGNORECASE)}),  # Alternative product title span with regex pattern
+        ("h1", {}),  # Generic H1 heading as fallback
+    ],
+    "current_price": [  # List of CSS selectors for current price in priority order
+        ("div", {"class": re.compile(r".*price.*current.*", re.IGNORECASE)}),  # Shopee current price container with regex pattern
+        ("div", {"class": re.compile(r".*price.*sale.*", re.IGNORECASE)}),  # Alternative sale price container with regex pattern
+        ("span", {"class": re.compile(r".*price.*", re.IGNORECASE)}),  # Generic price span as fallback
+    ],
+    "old_price": [  # List of CSS selectors for old price in priority order
+        ("div", {"class": re.compile(r".*price.*original.*", re.IGNORECASE)}),  # Shopee original price container with regex pattern
+        ("div", {"class": re.compile(r".*price.*before.*", re.IGNORECASE)}),  # Alternative before discount price container with regex pattern
+        ("span", {"class": re.compile(r".*old.*price.*", re.IGNORECASE)}),  # Generic old price span as fallback
+    ],
+    "discount": [  # List of CSS selectors for discount percentage in priority order
+        ("div", {"class": re.compile(r".*discount.*", re.IGNORECASE)}),  # Shopee discount container with regex pattern
+        ("span", {"class": re.compile(r".*discount.*", re.IGNORECASE)}),  # Alternative discount span with regex pattern
+        ("div", {"class": re.compile(r".*sale.*badge.*", re.IGNORECASE)}),  # Sale badge container as fallback
+    ],
+    "description": [  # List of CSS selectors for product description in priority order
+        ("div", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Shopee description container with regex pattern
+        ("div", {"class": re.compile(r".*product.*detail.*", re.IGNORECASE)}),  # Alternative product detail container with regex pattern
+        ("section", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Section element containing description as fallback
+    ],
+}  # Dictionary containing all HTML selectors used for scraping product information
+
 # Output Directory Constants:
 OUTPUT_DIRECTORY = "./Outputs/"  # Base directory for storing scraped data and media files
 
@@ -448,14 +477,7 @@ class Shopee:
         :return: Product name string or "Unknown Product" if not found
         """
         
-        # Try multiple selectors for Shopee product name
-        selectors = [  # Define list of CSS selectors to find product name in priority order
-            ("div", {"class": re.compile(r".*product.*name.*", re.IGNORECASE)}),  # Shopee product name container with regex pattern
-            ("span", {"class": re.compile(r".*product.*title.*", re.IGNORECASE)}),  # Alternative product title span with regex pattern
-            ("h1", {}),  # Generic H1 heading as fallback
-        ]  # End of selectors list
-        
-        for tag, attrs in selectors:  # Iterate through each selector combination
+        for tag, attrs in HTML_SELECTORS["product_name"]:  # Iterate through each selector combination from centralized dictionary
             name_element = soup.find(tag, attrs if attrs else None)  # type: ignore[arg-type]  # Search for element matching current selector
             if name_element:  # Verify if matching element was found
                 product_name = name_element.get_text(strip=True)  # Extract and clean text content from element
@@ -479,18 +501,10 @@ class Shopee:
         :return: Tuple of (integer_part, decimal_part) for current price
         """
         
-        # Try multiple selectors for Shopee prices
-        price_selectors = [  # Define list of CSS selectors to find current price in priority order
-            ("div", {"class": re.compile(r".*price.*current.*", re.IGNORECASE)}),  # Shopee current price container with regex pattern
-            ("div", {"class": re.compile(r".*price.*sale.*", re.IGNORECASE)}),  # Alternative sale price container with regex pattern
-            ("span", {"class": re.compile(r".*price.*", re.IGNORECASE)}),  # Generic price span as fallback
-        ]  # End of price_selectors list
-        
-        for tag, attrs in price_selectors:  # Iterate through each selector combination
+        for tag, attrs in HTML_SELECTORS["current_price"]:  # Iterate through each selector combination from centralized dictionary
             price_element = soup.find(tag, attrs if attrs else None)  # type: ignore[arg-type]  # Search for element matching current selector
             if price_element:  # Verify if matching element was found
                 price_text = price_element.get_text(strip=True)  # Extract and clean text content from element
-                # Extract numeric values from price text
                 match = re.search(r"(\d+)[,.](\d{2})", price_text)  # Search for price pattern with integer and decimal parts
                 if match:  # Verify if price pattern was found in text
                     integer_part = match.group(1)  # Extract integer part of price
@@ -514,14 +528,7 @@ class Shopee:
         :return: Tuple of (integer_part, decimal_part) for old price
         """
         
-        # Try multiple selectors for Shopee old prices
-        price_selectors = [  # Define list of CSS selectors to find old price in priority order
-            ("div", {"class": re.compile(r".*price.*original.*", re.IGNORECASE)}),  # Shopee original price container with regex pattern
-            ("div", {"class": re.compile(r".*price.*before.*", re.IGNORECASE)}),  # Alternative before discount price container with regex pattern
-            ("span", {"class": re.compile(r".*old.*price.*", re.IGNORECASE)}),  # Generic old price span as fallback
-        ]  # End of price_selectors list
-        
-        for tag, attrs in price_selectors:  # Iterate through each selector combination
+        for tag, attrs in HTML_SELECTORS["old_price"]:  # Iterate through each selector combination from centralized dictionary
             price_element = soup.find(tag, attrs if attrs else None)  # type: ignore[arg-type]  # Search for element matching current selector
             if price_element:  # Verify if matching element was found
                 price_text = price_element.get_text(strip=True)  # Extract and clean text content from element
@@ -548,18 +555,10 @@ class Shopee:
         :return: Discount percentage string or "N/A" if not found
         """
         
-        # Try multiple selectors for discount
-        discount_selectors = [  # Define list of CSS selectors to find discount percentage in priority order
-            ("div", {"class": re.compile(r".*discount.*", re.IGNORECASE)}),  # Shopee discount container with regex pattern
-            ("span", {"class": re.compile(r".*discount.*", re.IGNORECASE)}),  # Alternative discount span with regex pattern
-            ("div", {"class": re.compile(r".*sale.*badge.*", re.IGNORECASE)}),  # Sale badge container as fallback
-        ]  # End of discount_selectors list
-        
-        for tag, attrs in discount_selectors:  # Iterate through each selector combination
+        for tag, attrs in HTML_SELECTORS["discount"]:  # Iterate through each selector combination from centralized dictionary
             discount_element = soup.find(tag, attrs if attrs else None)  # type: ignore[arg-type]  # Search for element matching current selector
             if discount_element:  # Verify if matching element was found
                 discount_text = discount_element.get_text(strip=True)  # Extract and clean text content from element
-                # Look for percentage pattern
                 match = re.search(r"(\d+%)", discount_text)  # Search for discount percentage pattern
                 if match:  # Verify if discount pattern was found in text
                     verbose_output(  # Log successfully extracted discount percentage
@@ -578,14 +577,7 @@ class Shopee:
         :return: Product description string or "No description available" if not found
         """
         
-        # Try multiple selectors for Shopee descriptions
-        description_selectors = [  # Define list of CSS selectors to find product description in priority order
-            ("div", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Shopee description container with regex pattern
-            ("div", {"class": re.compile(r".*product.*detail.*", re.IGNORECASE)}),  # Alternative product detail container with regex pattern
-            ("section", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Section element containing description as fallback
-        ]  # End of description_selectors list
-        
-        for tag, attrs in description_selectors:  # Iterate through each selector combination
+        for tag, attrs in HTML_SELECTORS["description"]:  # Iterate through each selector combination from centralized dictionary
             description_element = soup.find(tag, attrs if attrs else None)  # type: ignore[arg-type]  # Search for element matching current selector
             if description_element:  # Verify if matching element was found
                 description = description_element.get_text(strip=True)  # Extract and clean text content from element
