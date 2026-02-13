@@ -514,3 +514,16 @@ PLATFORMS_MAP = {
 ```
 
 Detection logic checks for platform-specific domain keywords in the URL and routes to the appropriate scraper class.
+
+### Path Resolution
+
+Intelligent path resolution with 6+ variation attempts:
+
+1. Path as provided
+2. With `./Inputs/` prefix
+3. With `.zip` suffix
+4. With `/index.html` suffix
+5. All combinations of above
+6. Base directory extraction for `.html` files
+
+This ensures maximum user convenience when specifying local HTML paths.
