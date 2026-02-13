@@ -558,6 +558,30 @@ def validate_product_information(product_data, product_name_safe, description_fi
     return (len(reasons) == 0), reasons  # Return True if valid (no reasons), otherwise False and the list of reasons
 
 
+def delete_local_html_file(local_html_path):
+    """
+    Deletes the local HTML file if it exists after successful scraping.
+
+    :param local_html_path: Path to the local HTML file to delete
+    :return: True if deletion successful, False otherwise
+    """
+
+    if not local_html_path:  # If no local HTML path provided
+        return False  # Return False as nothing to delete
+    
+    if not verify_filepath_exists(local_html_path):  # If file doesn't exist
+        print(f"{BackgroundColors.YELLOW}Local HTML file not found: {local_html_path}{Style.RESET_ALL}")  # Output warning message
+        return False  # Return False as file doesn't exist
+    
+    try:  # Try to delete the file
+        os.remove(local_html_path)  # Remove the local HTML file
+        verbose_output(f"{BackgroundColors.GREEN}Deleted local HTML file: {BackgroundColors.CYAN}{local_html_path}{Style.RESET_ALL}")  # Output verbose deletion message
+        return True  # Return True on successful deletion
+    except Exception as e:  # If deletion fails
+        print(f"{BackgroundColors.RED}Error deleting local HTML file {BackgroundColors.CYAN}{local_html_path}{BackgroundColors.RED}: {BackgroundColors.YELLOW}{e}{Style.RESET_ALL}")  # Output error message
+        return False  # Return False on failure
+
+
 def generate_marketing_text(product_description, product_name_safe, description_file):
     """
     Generates marketing text from product description using Gemini AI.
@@ -805,6 +829,9 @@ def main():
                 f"{BackgroundColors.RED}Skipping Step 2: Gemini formatting due to invalid product information for URL: {BackgroundColors.CYAN}{url}{BackgroundColors.RED}.{Style.RESET_ALL}"
             )
             continue  # Move to next URL
+
+        if local_html_path:  # If a local HTML path was provided
+            delete_local_html_file(local_html_path)  # Delete the local HTML file after successful scraping and validation
 
         print(f"{BackgroundColors.CYAN}Step 2{BackgroundColors.GREEN}: Formatting with Gemini AI{Style.RESET_ALL}")  # Step 2: Format the product description with Gemini AI
         
