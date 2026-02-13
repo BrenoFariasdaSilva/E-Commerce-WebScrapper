@@ -137,6 +137,9 @@ class Shein:
 
     :return: None
     """
+    def __init__(self, url=""):
+
+
     def launch_browser(self):
 
 
