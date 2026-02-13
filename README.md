@@ -149,3 +149,11 @@ Page Rendering with JavaScript
   ↓
 Content Extraction
 ```
+
+## Requirements
+
+- **Python**: >= 3.8
+- **Operating System**: Windows, macOS, or Linux
+- **Chrome Browser**: Required for authenticated scraping (Shopee/Shein)
+- **Internet Connection**: Required for online scraping and AI features
+- **Google Gemini API Key**: Optional, for AI-powered marketing content generation
