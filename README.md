@@ -131,3 +131,21 @@ The application follows a modular, class-based architecture with clear separatio
 7. **Output Generation**: Creates organized directories with product descriptions
 8. **AI Enhancement**: Optionally generates marketing content via Gemini API
 9. **Cleanup**: Removes temporary files and extracted archives
+
+### Authentication Flow (Shopee/Shein)
+
+```
+User Authentication (One-time)
+  ↓
+Chrome Profile Creation
+  ↓
+Session Cookies Saved
+  ↓
+Playwright Launches Chrome with Profile
+  ↓
+Automatic Authentication via Cookies
+  ↓
+Page Rendering with JavaScript
+  ↓
+Content Extraction
+```
