@@ -139,12 +139,13 @@ class MercadoLivre:
     It also generates a marketing description file in a predefined template format.
     """
 
-    def __init__(self, url, local_html_path=None):
+    def __init__(self, url, local_html_path=None, prefix=""):
         """
         Initializes the MercadoLivre scraper with a product URL and optional local HTML file path.
 
         :param url: The URL of the Mercado Livre product page to scrape
         :param local_html_path: Optional path to a local HTML file for offline scraping
+        :param prefix: Optional platform prefix for output directory naming (e.g., "MercadoLivre")
         :return: None
         """
 
@@ -152,6 +153,7 @@ class MercadoLivre:
         self.product_url = None  # Will store the actual product page URL
         self.local_html_path = local_html_path  # Store path to local HTML file for offline scraping
         self.html_content = None  # Store HTML content for reuse (from HTTP request or local file)
+        self.prefix = prefix  # Store the platform prefix for directory naming
         self.session = requests.Session()  # Create a session for making requests
         self.session.headers.update({
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -603,7 +605,8 @@ class MercadoLivre:
         :return: Path to the created output directory
         """
         
-        output_dir = os.path.join(OUTPUT_DIRECTORY, f"MercadoLivre - {product_name_safe}")  # Create the output directory path with website prefix
+        directory_name = f"{self.prefix} - {product_name_safe}" if self.prefix else product_name_safe  # Construct directory name with platform prefix if available
+        output_dir = os.path.join(OUTPUT_DIRECTORY, directory_name)  # Create the output directory path
         self.create_directory(os.path.abspath(output_dir), output_dir.replace(".", ""))  # Create the output directory
         
         return output_dir  # Return the output directory path
