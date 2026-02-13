@@ -373,3 +373,42 @@ Instead of storing credentials or automating logins, the scraper:
    ```
 
 The browser will launch with your authenticated profile and scrape products automatically.
+
+## Output Structure
+
+Each scraped product generates the following structure:
+
+```
+Outputs/
+└── {Platform} - {Product Name}/
+    ├── {Product Name}_description.txt          # Product details in template format
+    ├── {Product Name}_Template.txt             # AI-generated marketing content (optional)
+    ├── image_1.webp                            # High-resolution product images
+    ├── image_2.webp
+    ├── ...
+    └── page.html                               # Complete page snapshot (Shopee/Shein only)
+```
+
+**Example**:
+```
+Outputs/
+└── Shopee - Wireless Gaming Mouse/
+    ├── Wireless Gaming Mouse_description.txt
+    ├── Wireless Gaming Mouse_Template.txt
+    ├── image_1.webp
+    ├── image_2.webp
+    └── page.html
+```
+
+### Description File Format
+
+```
+Product Name: Wireless Gaming Mouse
+
+Price: From R$89.90 to R$149.90 (40% OFF)
+
+Description: High-precision wireless gaming mouse with RGB lighting...
+
+🛒 Encontre na Shopee:
+👉 https://shopee.com.br/product-url
+```
