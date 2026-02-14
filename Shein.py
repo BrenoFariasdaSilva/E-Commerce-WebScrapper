@@ -96,22 +96,26 @@ VERBOSE = False  # Set to True to output verbose messages
 # HTML Selectors Dictionary:
 HTML_SELECTORS = {
     "product_name": [  # List of CSS selectors for product name in priority order
-        ("h1", {"class": "fsp-element"}),  # Shein product name heading with specific class
+        ("span", {"class": "fsp-element"}),  # Shein product name span with specific class
+        ("h1", {"class": "fsp-element"}),  # Shein product name heading with specific class (fallback)
         ("h1", {"class": re.compile(r".*product.*title.*", re.IGNORECASE)}),  # Generic product title pattern fallback
         ("h1", {}),  # Generic H1 heading as last resort fallback
     ],
     "current_price": [  # List of CSS selectors for current price in priority order
-        ("div", {"class": "productPrice__main"}),  # Shein current price container with specific class
+        ("div", {"id": "productMainPriceId"}),  # Shein current price container with specific ID
+        ("div", {"class": "productPrice__main"}),  # Shein current price container with specific class (fallback)
         ("span", {"class": re.compile(r".*price.*current.*", re.IGNORECASE)}),  # Generic current price pattern fallback
         ("div", {"class": re.compile(r".*price.*", re.IGNORECASE)}),  # Generic price div as last resort fallback
     ],
     "old_price": [  # List of CSS selectors for old price in priority order
-        ("div", {"class": "productDiscountInfo__retail"}),  # Shein old price container with specific class
+        ("p", {"class": "productEstimatedTagNewRetail__retail"}),  # Shein old price paragraph with specific class
+        ("div", {"class": "productDiscountInfo__retail"}),  # Shein old price container with specific class (fallback)
         ("span", {"class": re.compile(r".*price.*original.*", re.IGNORECASE)}),  # Generic original price pattern fallback
         ("del", {}),  # Deleted text element for old price as last resort fallback
     ],
     "discount": [  # List of CSS selectors for discount percentage in priority order
-        ("div", {"class": "productDiscountPercent"}),  # Shein discount percentage container with specific class
+        ("div", {"class": "productEstimatedTagNew__percent"}),  # Shein discount percentage div with specific class
+        ("div", {"class": "productDiscountPercent"}),  # Shein discount percentage container with specific class (fallback)
         ("span", {"class": re.compile(r".*discount.*", re.IGNORECASE)}),  # Generic discount span fallback
         ("span", {"class": re.compile(r".*percent.*", re.IGNORECASE)}),  # Percentage span as last resort fallback
     ],
@@ -119,6 +123,17 @@ HTML_SELECTORS = {
         ("div", {"class": "product-intro__attr-list-text"}),  # Shein description container with specific class
         ("div", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Generic description pattern fallback
         ("p", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Paragraph element containing description as last resort fallback
+    ],
+    "gallery_images": [  # List of CSS selectors for product gallery images in priority order
+        ("ul", {"class": re.compile(r"thumbs-picture.*one-picture__thumbs")}),  # Shein gallery thumbnails container with combined classes
+        ("ul", {"class": "thumbs-picture"}),  # Shein gallery thumbnails container as fallback
+        ("div", {"class": "darkreader darkreader--sync"}),  # DarkReader wrapper (when HTML saved with extension enabled)
+        ("div", {"class": re.compile(r".*gallery.*", re.IGNORECASE)}),  # Generic gallery pattern as last resort fallback
+    ],
+    "shipping_options": [  # List of CSS selectors for shipping options in priority order
+        ("div", {"class": "product-intro__size-radio"}),  # Shein shipping option radio buttons container
+        ("div", {"class": re.compile(r".*shipping.*radio.*", re.IGNORECASE)}),  # Generic shipping radio pattern fallback
+        ("div", {"class": re.compile(r".*envio.*", re.IGNORECASE)}),  # Portuguese "envio" (shipping) pattern as last resort fallback
     ],
 }  # Dictionary containing all HTML selectors used for scraping product information
 
