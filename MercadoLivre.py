@@ -298,15 +298,13 @@ class MercadoLivre:
         Also sets `self.product_data['is_international']` accordingly.
         """
         
-        try:  # Try to detect the international marker
-            found = bool(soup.find(attrs=HTML_SELECTORS["international_marker"]))  # Verify for the presence of the international marker using centralized selector
-            if not found:  # If element not found by ID, search for text containing "Internacional" or "International"
-                found = bool(soup.find(string=re.compile(r"Internacional|International", re.IGNORECASE)))  # Search for Portuguese or English text
-            self.product_data["is_international"] = True if found else False  # Set the product data flag
+        try:  # Try to detect the international marker using the explicit ID selector only
+            found = bool(soup.find(attrs=HTML_SELECTORS["international_marker"]))  # Only consider the specific selector defined in HTML_SELECTORS
+            self.product_data["is_international"] = True if found else False  # Set the product data flag based solely on the selector
             return found  # Return the detection result
-        except Exception:  # If any error occurs during detection, assume it's not international
-            self.product_data["is_international"] = False  # Set the product data flag to False
-            return False  # Return False on error
+        except Exception:  # On error, assume not international and record that
+            self.product_data["is_international"] = False
+            return False
 
 
     def prefix_international_name(self):
