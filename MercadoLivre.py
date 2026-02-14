@@ -1025,6 +1025,33 @@ class MercadoLivre:
                 downloaded_images.append(filepath)  # Add to list
         
         return downloaded_images  # Return list of downloaded image files
+    
+    def download_product_videos(self, session, product_url, output_dir, soup=None):
+        """
+        Downloads all product videos from the gallery.
+        
+        :param session: Requests session object
+        :param product_url: URL of the product page
+        :param output_dir: Directory to save videos
+        :param soup: Optional BeautifulSoup object (to avoid re-fetching page)
+        :return: List of tuples (video_path, thumbnail_path) for downloaded videos
+        """
+        
+        downloaded_videos = []  # List to store downloaded video file paths
+        
+        if soup is None:  # If soup not provided, fetch and parse the product page
+            soup = self.fetch_product_page(session, product_url)  # Fetch and parse the product page
+        
+        video_data = self.find_video_urls(soup)  # Find all video URLs
+        
+        video_count = 0  # Counter for videos
+        for video_url, thumbnail_url in video_data:  # Iterate through video data
+            video_count += 1  # Increment counter
+            paths = self.download_single_video(session, video_url, thumbnail_url, output_dir, video_count)  # Download video
+            if paths[0]:  # If download successful
+                downloaded_videos.append(paths)  # Add to list
+        
+        return downloaded_videos  # Return list of downloaded video files
 
     def create_product_description_file(self, product_data, output_dir, product_name_safe, url):
         """
