@@ -751,80 +751,6 @@ def delete_local_html_file(local_html_path):
         return False  # Return False on failure
 
 
-def copy_assets_from_local_html_dir(local_html_path, product_directory):
-    """
-    Copies 'images' or 'assets' directories from the local HTML file's directory
-    to the product's output directory if they exist. After copying, removes unwanted
-    file types (fonts, binaries, icons) and keeps only image files.
-
-    :param local_html_path: Path to the local HTML file
-    :param product_directory: Directory name (may include platform prefix) for the product output
-    :return: None
-    """
-    
-    if not local_html_path:  # If no local HTML path provided
-        return  # Return as nothing to copy
-    
-    if not verify_filepath_exists(local_html_path):  # If the local HTML file doesn't exist
-        return  # Return as source doesn't exist
-    
-    local_html_dir = os.path.dirname(os.path.abspath(local_html_path))  # Get the directory of the local HTML file
-    product_output_dir = os.path.join(OUTPUT_DIRECTORY, product_directory)  # Path to the product output directory
-    
-    if not os.path.exists(product_output_dir):  # If the product output directory doesn't exist
-        verbose_output(f"{BackgroundColors.YELLOW}Product output directory not found: {product_output_dir}{Style.RESET_ALL}")
-        return  # Return as destination doesn't exist
-    
-    # Extensions to remove after copying (fonts, binaries, icons)
-    extensions_to_remove = [".bin", ".eot", ".ttf", ".woff", ".woff2", ".ico"]  # List of file extensions to delete
-    
-    # Extensions to keep (image files only)
-    extensions_to_keep = [".gif", ".jpg", ".png", ".svg", ".webp"]  # List of file extensions to preserve
-    
-    # Check for 'images' and 'assets' directories
-    for dir_name in ["images", "assets"]:  # Iterate through possible asset directory names
-        source_dir = os.path.join(local_html_dir, dir_name)  # Full path to source directory
-        
-        if os.path.exists(source_dir) and os.path.isdir(source_dir):  # If the directory exists
-            destination_dir = os.path.join(product_output_dir, dir_name)  # Full path to destination directory
-            
-            try:  # Try to copy the directory
-                if os.path.exists(destination_dir):  # If destination already exists
-                    shutil.rmtree(destination_dir)  # Remove existing directory
-                
-                shutil.copytree(source_dir, destination_dir)  # Copy the entire directory tree
-                verbose_output(f"{BackgroundColors.GREEN}Copied {BackgroundColors.CYAN}{dir_name}{BackgroundColors.GREEN} directory from {BackgroundColors.CYAN}{source_dir}{BackgroundColors.GREEN} to {BackgroundColors.CYAN}{destination_dir}{Style.RESET_ALL}")
-                
-                # Clean up unwanted file types after copying
-                removed_count = 0  # Counter for removed files
-                for root, dirs, files in os.walk(destination_dir):  # Walk through all files in the copied directory
-                    for file in files:  # Iterate through each file
-                        file_path = os.path.join(root, file)  # Full path to the file
-                        file_ext = os.path.splitext(file)[1].lower()  # Get file extension in lowercase
-                        
-                        # Remove files with unwanted extensions
-                        if file_ext in extensions_to_remove:  # If file has an unwanted extension
-                            try:  # Try to remove the file
-                                os.remove(file_path)  # Delete the file
-                                removed_count += 1  # Increment removal counter
-                                verbose_output(f"{BackgroundColors.YELLOW}Removed unwanted file: {BackgroundColors.CYAN}{file}{BackgroundColors.YELLOW} ({file_ext}){Style.RESET_ALL}")
-                            except Exception as remove_error:  # If removal fails
-                                print(f"{BackgroundColors.RED}Error removing file {BackgroundColors.CYAN}{file_path}{BackgroundColors.RED}: {BackgroundColors.YELLOW}{remove_error}{Style.RESET_ALL}")
-                        elif file_ext not in extensions_to_keep:  # If file extension is not in the keep list
-                            try:  # Try to remove the file
-                                os.remove(file_path)  # Delete the file
-                                removed_count += 1  # Increment removal counter
-                                verbose_output(f"{BackgroundColors.YELLOW}Removed non-image file: {BackgroundColors.CYAN}{file}{BackgroundColors.YELLOW} ({file_ext}){Style.RESET_ALL}")
-                            except Exception as remove_error:  # If removal fails
-                                print(f"{BackgroundColors.RED}Error removing file {BackgroundColors.CYAN}{file_path}{BackgroundColors.RED}: {BackgroundColors.YELLOW}{remove_error}{Style.RESET_ALL}")
-                
-                if removed_count > 0:  # If any files were removed
-                    print(f"{BackgroundColors.GREEN}Cleaned up {BackgroundColors.CYAN}{removed_count}{BackgroundColors.GREEN} unwanted files from {BackgroundColors.CYAN}{dir_name}{BackgroundColors.GREEN} directory{Style.RESET_ALL}")
-                
-            except Exception as e:  # If copying fails
-                print(f"{BackgroundColors.RED}Error copying {BackgroundColors.CYAN}{dir_name}{BackgroundColors.RED} directory from {BackgroundColors.CYAN}{source_dir}{BackgroundColors.RED}: {BackgroundColors.YELLOW}{e}{Style.RESET_ALL}")
-
-
 def validate_and_fix_output_file(file_path):
     """
     Validates and fixes common formatting issues in output files.
@@ -1113,7 +1039,6 @@ def main():
         if product_directory and isinstance(product_directory, str):  # If product directory is valid
             clean_duplicate_images(product_directory)  # Clean up duplicate images in the product directory
             exclude_small_images(product_directory)  # Exclude images smaller than 2KB
-            copy_assets_from_local_html_dir(html_path_for_assets if html_path_for_assets else local_html_path, product_directory)  # Copy images/assets from local HTML directory if present
         
         if extracted_dir_to_cleanup and os.path.exists(extracted_dir_to_cleanup):  # If extraction occurred and directory exists
             try:  # Try to clean up the extracted directory
