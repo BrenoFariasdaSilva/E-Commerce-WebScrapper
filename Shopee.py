@@ -206,6 +206,86 @@ class Shopee:
             )  # End of verbose output call
 
 
+ def find_image_urls(self, soup: BeautifulSoup) -> List[str]:
+        """
+        Finds all image URLs from the product gallery (class="airUhU").
+        Extracts full-size images from thumbnail containers (class="UBG7wZ").
+        Removes resize parameters (@resize_w82_nl, @resize_w164_nl) to get original images.
+        
+        :param soup: BeautifulSoup object containing the parsed HTML
+        :return: List of image URLs
+        """
+        
+        image_urls: List[str] = []  # Initialize empty list to store image URLs
+        seen_urls: set = set()  # Track URLs to avoid duplicates
+        
+        verbose_output(  # Log image extraction attempt
+            f"{BackgroundColors.GREEN}Extracting image URLs from gallery...{Style.RESET_ALL}"
+        )  # End of verbose output call
+        
+        try:  # Attempt to find images with error handling
+            gallery = soup.find("div", HTML_SELECTORS["gallery"])
+            
+            if gallery and isinstance(gallery, Tag):  # Verify gallery container was found
+                thumbnails = gallery.find_all("div", class_="UBG7wZ")
+                
+                verbose_output(  # Log number of thumbnails found
+                    f"{BackgroundColors.GREEN}Found {BackgroundColors.CYAN}{len(thumbnails)}{BackgroundColors.GREEN} thumbnail containers.{Style.RESET_ALL}"
+                )  # End of verbose output call
+                
+                for thumbnail in thumbnails:  # Iterate through each thumbnail container
+                    if not isinstance(thumbnail, Tag):  # Ensure element is a BeautifulSoup Tag
+                        continue  # Skip non-Tag elements
+                    
+                    img = thumbnail.find("img", class_="uXN1L5")
+                    
+                    if img and isinstance(img, Tag):  # Verify image tag was found
+                        srcset = img.get("srcset")
+                        img_url = None
+                        
+                        if srcset and isinstance(srcset, str):  # Check if srcset attribute exists
+                            srcset_parts = srcset.split(",")  # Split by comma
+                            if srcset_parts:  # Ensure we have parts
+                                first_url = srcset_parts[0].strip().split()[0]  # Get first URL before space
+                                img_url = first_url
+                        
+                        if not img_url:  # If srcset didn't provide URL
+                            src = img.get("src") or img.get("data-src")
+                            if src and isinstance(src, str):  # Check if src attribute exists
+                                img_url = src
+                        
+                        if img_url:  # If we found a URL
+                            import re
+                            img_url = re.sub(r'@resize_w\d+_nl', '', img_url)
+                            
+                            if img_url.startswith("/file/"):  # Relative path
+                                img_url = f"https://down-br.img.susercontent.com{img_url}"
+                            
+                            if ("placeholder" not in img_url.lower() and 
+                                "loading" not in img_url.lower() and
+                                img_url not in seen_urls):  # Check for duplicates
+                                
+                                image_urls.append(img_url)  # Add image URL to list
+                                seen_urls.add(img_url)  # Track this URL
+                                
+                                verbose_output(  # Log found image URL
+                                    f"{BackgroundColors.GREEN}Found image: {BackgroundColors.CYAN}{img_url[:100]}{Style.RESET_ALL}"
+                                )  # End of verbose output call
+            else:  # Gallery container not found
+                verbose_output(  # Log gallery not found
+                    f"{BackgroundColors.YELLOW}Gallery container (class='airUhU') not found.{Style.RESET_ALL}"
+                )  # End of verbose output call
+        
+        except Exception as e:  # Catch any exceptions during image extraction
+            print(f"{BackgroundColors.RED}Error finding images: {e}{Style.RESET_ALL}")  # Alert user about error
+        
+        verbose_output(  # Log total number of images found
+            f"{BackgroundColors.GREEN}Found {BackgroundColors.CYAN}{len(image_urls)}{BackgroundColors.GREEN} images.{Style.RESET_ALL}"
+        )  # End of verbose output call
+        
+        return image_urls  # Return list of image URLs
+
+
  def find_video_urls(self, soup: BeautifulSoup) -> List[str]:
         """
         Finds all video URLs from the product page.
