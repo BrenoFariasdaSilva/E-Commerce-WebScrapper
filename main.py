@@ -824,7 +824,7 @@ def generate_marketing_text(product_description, description_file, product_data=
     is_international = product_data.get("is_international", False) if product_data else False  # Check if product is international
     internacional_instruction = ""  # Initialize international instruction as empty
     if is_international:  # If the product is international, we need to add a specific instruction to the prompt
-        internacional_instruction = "\n\n**IMPORTANTE**: Este produto é INTERNACIONAL. Você DEVE adicionar '[INTERNACIONAL] - ' antes do nome do produto no início do texto formatado."
+        internacional_instruction = "\n\n**IMPORTANTE**: Este produto é INTERNACIONAL. Você DEVE adicionar '[PRODUTO INTERNACIONAL]: ' antes do nome do produto no início do texto formatado."
     
     old_price_int = str(product_data.get("old_price_integer", "")).strip() if product_data else ""
     old_price_dec = str(product_data.get("old_price_decimal", "")).strip() if product_data else ""
