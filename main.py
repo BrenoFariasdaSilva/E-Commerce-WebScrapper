@@ -143,7 +143,7 @@ RUN_FUNCTIONS = {
 DELAY_BETWEEN_REQUESTS = 5  # Seconds to wait between processing URLs to avoid rate limiting
 
 # Gemini AI Constants:
-GEMINI_MARKETING_PROMPT_TEMPLATE = """Você é um especialista em marketing de e-commerce. Sua tarefa é transformar as informações do produto abaixo em um texto de marketing persuasivo, chamativo e formatado.
+GEMINI_MARKETING_PROMPT_TEMPLATE = """Você é um especialista em marketing de e-commerce. Sua tarefa é transformar as informações do produto abaixo em um texto de marketing persuasivo, chamativo, direto e formatado.
 
 INFORMAÇÕES DO PRODUTO:
 {product_description}
@@ -175,6 +175,9 @@ INSTRUÇÕES:
 8. Sugira onde/como usar o produto
 9. Se aplicável, sugira como presente ou ocasião especial
 10. Para o desconto, quando existir, nunca usar o termo "off", prefira algo como "20% de Desconto!"
+11. O texto final NÃO pode ultrapassar 1000 caracteres (incluindo espaços e emojis)
+12. Seja direto, evite parágrafos longos e evite textos explicativos extensos — consumidores não gostam de ler textos longos
+13. Priorize frases curtas, objetivas e de alto impacto
 
 Gere APENAS o texto formatado, sem explicações adicionais."""  # Template for Gemini AI marketing text generation
 
