@@ -151,8 +151,8 @@ INFORMAÇÕES DO PRODUTO:
 FORMATO OBRIGATÓRIO (siga EXATAMENTE este formato):
 *{{{{NOME DO PRODUTO}}}} – {{{{DIFERENCIAL CURTO}}}}*
 
-💰 DE *R${{{{PREÇO_ANTIGO}}}}* POR APENAS *R${{{{PREÇO_ATUAL}}}}*
-🎟️ *{{{{INFORMAÇÃO DE CUPOM / % DE DESCONTO}}}}*
+💰 DE *R${{{{PREÇO_ANTIGO}}}}* POR APENAS *R${{{{PREÇO_ATUAL}}}}* (SE DISPONÍVEL)
+🎟️ *{{{{INFORMAÇÃO DE CUPOM / % DE DESCONTO}}}}* (SE DISPONÍVEL)
 
 *{{{{FRASE DE IMPACTO / BENEFÍCIO PRINCIPAL}}}}*
 
@@ -168,11 +168,12 @@ INSTRUÇÕES:
 1. Use as informações fornecidas para preencher cada campo
 2. Seja persuasivo, criativo e chamativo
 3. Mantenha o formato EXATAMENTE como mostrado
-4. Use os preços e descontos reais do produto
-5. Inclua o link real do produto
-6. Crie 2-3 características principais marcantes
-7. Sugira onde/como usar o produto
-8. Se aplicável, sugira como presente ou ocasião especial
+4. Use os preços e descontos reais do produto quando disponíveis
+5. Se o preço antigo ou desconto não estiver disponível (N/A), OMITA essas linhas completamente
+6. Inclua o link real do produto
+7. Crie 2-3 características principais marcantes
+8. Sugira onde/como usar o produto
+9. Se aplicável, sugira como presente ou ocasião especial
 
 Gere APENAS o texto formatado, sem explicações adicionais."""  # Template for Gemini AI marketing text generation
 
