@@ -1116,6 +1116,77 @@ class MercadoLivre:
             )  # Output warning
             return None  # Return None on failure
 
+    def download_media(self):
+        """
+        Downloads product images from the gallery and creates a product description file.
+
+        :return: List of downloaded file paths (images and description file)
+        """
+
+        verbose_output(
+            f"{BackgroundColors.GREEN}Downloading product media...{Style.RESET_ALL}"
+        )  # Output the verbose message
+
+        downloaded_files = []  # List to store downloaded file paths
+        
+        if not self.product_url or not isinstance(self.product_url, str):  # If product URL is invalid
+            print(
+                f"{BackgroundColors.RED}Invalid product URL. Cannot download media.{Style.RESET_ALL}"
+            )  # Output the error message
+            return downloaded_files  # Return empty list
+        
+        try:  # Try to fetch and parse the product page
+            product_name_raw = self.product_data.get("name", "").strip()  # Get the raw product name
+            if isinstance(product_name_raw, str) and product_name_raw.lower() == "unknown product":  # If product name is "Unknown Product", skip media download and file creation
+                verbose_output(
+                    f"{BackgroundColors.YELLOW}Product name is 'Unknown Product' — skipping media download and file creation.{Style.RESET_ALL}"
+                )
+                return downloaded_files  # Return empty list
+
+            raw_name_for_safe = self.product_data.get("name", "Unknown_Product")
+            product_name_safe = re.sub(r'[<>:"/\\|?*]', '_', raw_name_for_safe.title())  # Create a safe filename
+            output_dir = self.create_output_directory(product_name_safe)  # Create the output directory
+            
+            soup = self.fetch_product_page(self.session, self.product_url)  # Fetch and parse the product page
+            
+            verbose_output(
+                f"{BackgroundColors.GREEN}Downloading images from gallery...{Style.RESET_ALL}"
+            )  # Output the step message
+            
+            downloaded_images = self.download_product_images(self.session, self.product_url, output_dir, soup)  # Download images
+            downloaded_files.extend(downloaded_images)  # Add images to downloaded files
+            
+            verbose_output(
+                f"{BackgroundColors.GREEN}Downloading videos from gallery...{Style.RESET_ALL}"
+            )  # Output the step message
+            
+            downloaded_videos = self.download_product_videos(self.session, self.product_url, output_dir, soup)  # Download videos
+            for video_path, thumbnail_path in downloaded_videos:  # Add videos and thumbnails to downloaded files
+                if video_path:  # Only add if video was downloaded successfully
+                    downloaded_files.append(video_path)  # Add video to downloaded files
+                if thumbnail_path:  # Only add if thumbnail was downloaded successfully
+                    downloaded_files.append(thumbnail_path)  # Add thumbnail to downloaded files
+            
+            verbose_output(
+                f"{BackgroundColors.GREEN}Creating product description file...{Style.RESET_ALL}"
+            )  # Output message
+            
+            txt_file = self.create_product_description_file(self.product_data, output_dir, product_name_safe, self.url)  # Create description file
+            if txt_file:  # If file was created successfully
+                downloaded_files.append(txt_file)  # Add to downloaded files
+            
+            verbose_output(
+                f"{BackgroundColors.GREEN}Media download complete. Total files: {BackgroundColors.CYAN}{len(downloaded_files)}{Style.RESET_ALL}"
+            )  # Output completion
+            
+            return downloaded_files  # Return list
+            
+        except Exception as e:  # If error
+            print(
+                f"{BackgroundColors.RED}Unexpected error in download_media: {e}{Style.RESET_ALL}"
+            )  # Output error
+            return downloaded_files  # Return whatever was downloaded
+        
     def scrape(self, verbose=VERBOSE):
         """
         Main scraping method that orchestrates the entire scraping process.
