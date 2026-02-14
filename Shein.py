@@ -612,7 +612,8 @@ class Shein:
         """
         Extracts the product description from the parsed HTML soup.
         First tries HTML extraction from class="product-intro__attr-list-text",
-        then tries structured specification table extraction from common-entry__content.
+        then tries structured specification table extraction from common-entry__content,
+        then tries goods_desc JSON field extraction from script tags.
         
         :param soup: BeautifulSoup object containing the parsed HTML
         :return: Product description string or "No description available" if not found
@@ -620,7 +621,7 @@ class Shein:
 
         if soup is None:  # Guard against None to avoid attribute access on None
             return "No description available"  # Default description when no soup provided
-        
+
         for tag, attrs in HTML_SELECTORS["description"]:  # Iterate through description selectors
             description_element = soup.find(tag, attrs if attrs else None)  # Find element for each selector
             if description_element:  # If an element was found
@@ -632,35 +633,149 @@ class Shein:
         verbose_output(f"{BackgroundColors.YELLOW}HTML description not found, trying structured specification extraction...{Style.RESET_ALL}")  # Notify about next fallback
 
         try:  # Attempt structured specification extraction
-            spec_container = soup.find("div", class_="common-entry__content")  # Locate main specs container
-            if spec_container:  # If container exists
-                content_box = spec_container.find("div", class_="shop-entry__contentBox")  # Find inner content box
-                if content_box:  # If content box exists
-                    specifications = []  # Collect valid label:value pairs
-
-                    children = content_box.find_all(recursive=False)  # Iterate direct children only
-                    for child in children:  # For each child element
-                        text_nodes = [text.strip() for text in child.stripped_strings if text.strip()]  # Gather non-empty text nodes
-
-                        if len(text_nodes) >= 2:  # Expect at least label and value
-                            label = text_nodes[0]  # First meaningful node is label
-                            value = text_nodes[1]  # Second meaningful node is value
-
-                            noise_keywords = ["Classificação", "Itens", "Seguidores", "pago", "seguido", "está navegando"]  # Noise filters
-                            if len(label) > 2 and len(value) > 0:  # Basic validation
-                                if not any(keyword.lower() in label.lower() for keyword in noise_keywords):  # Exclude noisy labels
-                                    specifications.append(f"{label}: {value}")  # Append formatted pair
-
-                    if len(specifications) >= 3:  # Require at least 3 pairs to accept
-                        description = "\n".join(specifications)  # Join pairs with newline
-                        verbose_output(f"{BackgroundColors.GREEN}Structured specifications extracted successfully ({len(description)} characters).{Style.RESET_ALL}")  # Log success
-                        return description  # Return structured description
-                    else:
-                        verbose_output(f"{BackgroundColors.YELLOW}Found only {len(specifications)} specifications, need at least 3. Continuing to JSON extraction...{Style.RESET_ALL}")  # Not enough pairs
+            specifications = []  # Collect valid label:value pairs
+            script_tags = soup.find_all("script")  # Find all script tags in document
+            verbose_output(f"{BackgroundColors.CYAN}Searching through {len(script_tags)} script tags for specification table...{Style.RESET_ALL}")  # Log script tag count
+            
+            for script_tag in script_tags:  # Iterate through each script tag
+                if not script_tag.string:  # Skip script tags with no content
+                    continue
+                
+                script_content = str(script_tag.string)  # Convert script content to string
+                anchor_pos = script_content.find('class="common-entry__content"')  # Search for specification table anchor
+                
+                if anchor_pos == -1:  # Anchor not found in this script tag
+                    continue
+                
+                verbose_output(f"{BackgroundColors.GREEN}Found specification table anchor in script tag.{Style.RESET_ALL}")  # Log anchor found
+                
+                start_pos = max(0, anchor_pos - 100)  # Start extraction slightly before anchor for context
+                end_search = script_content.find('class="common-entry__content"', anchor_pos + 1)  # Look for next occurrence
+                end_pos = end_search if end_search != -1 else anchor_pos + 50000  # Limit extraction window to 50KB
+                fragment = script_content[start_pos:end_pos]  # Extract HTML fragment containing table
+                
+                verbose_output(f"{BackgroundColors.CYAN}Isolated table fragment ({len(fragment)} chars), parsing...{Style.RESET_ALL}")  # Log fragment size
+                
+                try:  # Parse isolated fragment
+                    fragment_soup = BeautifulSoup(fragment, "html.parser")  # Parse fragment with BeautifulSoup
+                    all_text_nodes = []  # Collect all text nodes from fragment
+                    
+                    for element in fragment_soup.descendants:  # Iterate through all descendant nodes
+                        if isinstance(element, str):  # Check if node is text (NavigableString)
+                            text = element.strip()  # Strip whitespace from text
+                            if text and len(text) > 0:  # Only include non-empty text
+                                all_text_nodes.append(text)  # Add to collection
+                    
+                    verbose_output(f"{BackgroundColors.CYAN}Extracted {len(all_text_nodes)} text nodes from fragment.{Style.RESET_ALL}")  # Log node count
+                    
+                    i = 0  # Initialize index for text node iteration
+                    noise_keywords = ["Classificação", "Itens", "Seguidores", "pago", "seguido", "está navegando", "Vendas", "Avaliações"]  # Noise filters
+                    seen_labels = set()  # Track seen labels to avoid duplicates
+                    
+                    while i < len(all_text_nodes):  # Process text nodes sequentially
+                        current_text = all_text_nodes[i]  # Get current text node
+                        
+                        if any(noise in current_text for noise in noise_keywords):  # Check for noise keywords
+                            i += 1  # Skip noise node
+                            continue
+                        
+                        if ":" in current_text and len(current_text) < 50:  # Likely a label (short text with colon)
+                            label = current_text.replace(":", "").strip()  # Extract label without colon
+                            
+                            if label in seen_labels:  # Check for duplicate label
+                                i += 1  # Skip duplicate
+                                continue
+                            
+                            if len(label) > 2:  # Validate label length
+                                value_parts = []  # Collect value parts
+                                j = i + 1  # Start looking for value in next nodes
+                                
+                                while j < len(all_text_nodes) and j < i + 5:  # Look ahead up to 5 nodes for value
+                                    next_text = all_text_nodes[j]  # Get next text node
+                                    
+                                    if ":" in next_text and len(next_text) < 50:  # Stop if next label found
+                                        break
+                                    
+                                    if len(next_text) > 0 and not any(noise in next_text for noise in noise_keywords):  # Valid value part
+                                        value_parts.append(next_text)  # Add to value parts
+                                        
+                                        if len(" ".join(value_parts)) > 100:  # Stop if value is long enough
+                                            break
+                                    
+                                    j += 1  # Move to next node
+                                
+                                if value_parts:  # If value parts found
+                                    value = " ".join(value_parts).strip()  # Join value parts with space
+                                    
+                                    if len(value) > 0:  # Validate value is not empty
+                                        specifications.append(f"{label}: {value}")  # Append formatted pair
+                                        seen_labels.add(label)  # Mark label as seen
+                                        verbose_output(f"{BackgroundColors.CYAN}Extracted pair: {label}: {value[:50]}...{Style.RESET_ALL}")  # Log extracted pair
+                                        
+                                        if "sku" in label.lower() or "skij" in label.lower():  # Check if SKU reached
+                                            verbose_output(f"{BackgroundColors.GREEN}Reached SKU label, stopping extraction.{Style.RESET_ALL}")  # Log SKU reached
+                                            break  # Stop extraction at SKU
+                                
+                                i = j  # Move index to where value ended
+                            else:
+                                i += 1  # Skip invalid label
+                        else:
+                            i += 1  # Move to next node
+                    
+                    break  # Exit script tag loop after processing first matching script
+                    
+                except Exception as parse_error:  # Catch fragment parsing errors
+                    verbose_output(f"{BackgroundColors.YELLOW}Error parsing fragment: {parse_error}{Style.RESET_ALL}")  # Log parse error
+                    continue  # Try next script tag
+            
+            if len(specifications) >= 3:  # Require at least 3 pairs to accept
+                description = "\n".join(specifications)  # Join pairs with newline
+                verbose_output(f"{BackgroundColors.GREEN}Structured specifications extracted successfully ({len(specifications)} pairs, {len(description)} characters).{Style.RESET_ALL}")  # Log success with counts
+                return description  # Return structured description
+            else:
+                verbose_output(f"{BackgroundColors.YELLOW}Found only {len(specifications)} specifications, need at least 3. Continuing to JSON extraction...{Style.RESET_ALL}")  # Not enough pairs
+                
         except Exception as e:  # Catch and log extraction errors
-            verbose_output(f"{BackgroundColors.YELLOW}Error extracting structured specifications: {e}{Style.RESET_ALL}")
+            verbose_output(f"{BackgroundColors.YELLOW}Error extracting structured specifications: {e}{Style.RESET_ALL}")  # Log exception
 
-        verbose_output(f"{BackgroundColors.YELLOW}Structured specification extraction failed, trying JSON extraction...{Style.RESET_ALL}")  # Proceed to JSON fallback
+        verbose_output(f"{BackgroundColors.YELLOW}Structured specification extraction failed, trying goods_desc JSON extraction...{Style.RESET_ALL}")  # Proceed to goods_desc fallback
+
+        try:  # Attempt goods_desc JSON extraction from script tags
+            script_tags = soup.find_all("script")  # Find all script tags in document
+            verbose_output(f"{BackgroundColors.CYAN}Searching through {len(script_tags)} script tags for goods_desc field...{Style.RESET_ALL}")  # Log search start
+            
+            for script_tag in script_tags:  # Iterate through each script tag
+                if not script_tag.string:  # Skip script tags with no content
+                    continue
+                
+                script_content = str(script_tag.string)  # Convert script content to string
+                
+                if '"goods_desc"' in script_content or "'goods_desc'" in script_content:  # Check if goods_desc field exists
+                    verbose_output(f"{BackgroundColors.GREEN}Found goods_desc field in script tag, parsing JSON...{Style.RESET_ALL}")  # Log field found
+                    
+                    try:  # Parse JSON data
+                        json_data = json.loads(script_content)  # Parse script content as JSON
+                        
+                        if isinstance(json_data, dict) and "goods_desc" in json_data:  # Check if goods_desc exists in parsed data
+                            goods_desc = json_data["goods_desc"]  # Extract goods_desc value
+                            
+                            if goods_desc and len(goods_desc) > 10:  # Validate description length
+                                verbose_output(f"{BackgroundColors.GREEN}goods_desc extracted successfully ({len(goods_desc)} chars).{Style.RESET_ALL}")  # Log success
+                                return goods_desc  # Return goods_desc content
+                        
+                    except json.JSONDecodeError:  # Handle JSON parsing errors
+                        verbose_output(f"{BackgroundColors.YELLOW}Failed to parse JSON in script tag.{Style.RESET_ALL}")  # Log parse failure
+                        continue  # Try next script tag
+                    except Exception as parse_error:  # Handle other parsing errors
+                        verbose_output(f"{BackgroundColors.YELLOW}Error parsing goods_desc: {parse_error}{Style.RESET_ALL}")  # Log error
+                        continue  # Try next script tag
+            
+            verbose_output(f"{BackgroundColors.YELLOW}goods_desc field not found or invalid.{Style.RESET_ALL}")  # Log failure
+                
+        except Exception as e:  # Catch and log extraction errors
+            verbose_output(f"{BackgroundColors.YELLOW}Error extracting goods_desc: {e}{Style.RESET_ALL}")  # Log exception
+
+        verbose_output(f"{BackgroundColors.YELLOW}All description extraction methods failed.{Style.RESET_ALL}")  # Log complete failure
 
         return "No description available"  # Return default when no description found
 
