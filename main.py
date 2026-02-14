@@ -142,6 +142,40 @@ RUN_FUNCTIONS = {
 # Delay Constants:
 DELAY_BETWEEN_REQUESTS = 5  # Seconds to wait between processing URLs to avoid rate limiting
 
+# Gemini AI Constants:
+GEMINI_MARKETING_PROMPT_TEMPLATE = """Você é um especialista em marketing de e-commerce. Sua tarefa é transformar as informações do produto abaixo em um texto de marketing persuasivo, chamativo e formatado.
+
+INFORMAÇÕES DO PRODUTO:
+{product_description}
+
+FORMATO OBRIGATÓRIO (siga EXATAMENTE este formato):
+*{{{{NOME DO PRODUTO}}}} – {{{{DIFERENCIAL CURTO}}}}*
+
+💰 DE *R${{{{PREÇO_ANTIGO}}}}* POR APENAS *R${{{{PREÇO_ATUAL}}}}*
+🎟️ *{{{{INFORMAÇÃO DE CUPOM / % DE DESCONTO}}}}*
+
+*{{{{FRASE DE IMPACTO / BENEFÍCIO PRINCIPAL}}}}*
+
+✨ {{{{CARACTERÍSTICA 1}}}}
+✨ {{{{CARACTERÍSTICA 2}}}}
+✨ {{{{ONDE / COMO USAR}}}}
+✨ {{{{IDEIA DE PRESENTE / OCASIÃO}}}}
+
+🛒 Encontre na {{{{LOJA / PLATAFORMA}}}}:
+👉 {{{{LINK DO PRODUTO}}}}
+
+INSTRUÇÕES:
+1. Use as informações fornecidas para preencher cada campo
+2. Seja persuasivo, criativo e chamativo
+3. Mantenha o formato EXATAMENTE como mostrado
+4. Use os preços e descontos reais do produto
+5. Inclua o link real do produto
+6. Crie 2-3 características principais marcantes
+7. Sugira onde/como usar o produto
+8. Se aplicável, sugira como presente ou ocasião especial
+
+Gere APENAS o texto formatado, sem explicações adicionais."""  # Template for Gemini AI marketing text generation
+
 # Functions Definitions:
 
 
@@ -862,38 +896,7 @@ def generate_marketing_text(product_description, description_file):
         print(f"{BackgroundColors.RED}Error: No Gemini API keys configured in .env file.{Style.RESET_ALL}")
         return False  # Return failure
     
-    prompt = f"""Você é um especialista em marketing de e-commerce. Sua tarefa é transformar as informações do produto abaixo em um texto de marketing persuasivo, chamativo e formatado.
-
-INFORMAÇÕES DO PRODUTO:
-{product_description}
-
-FORMATO OBRIGATÓRIO (siga EXATAMENTE este formato):
-*{{NOME DO PRODUTO}} – {{DIFERENCIAL CURTO}}*
-
-💰 DE *R${{PREÇO_ANTIGO}}* POR APENAS *R${{PREÇO_ATUAL}}*
-🎟️ *{{INFORMAÇÃO DE CUPOM / % DE DESCONTO}}*
-
-*{{FRASE DE IMPACTO / BENEFÍCIO PRINCIPAL}}*
-
-✨ {{CARACTERÍSTICA 1}}
-✨ {{CARACTERÍSTICA 2}}
-✨ {{ONDE / COMO USAR}}
-✨ {{IDEIA DE PRESENTE / OCASIÃO}}
-
-🛒 Encontre na {{LOJA / PLATAFORMA}}:
-👉 {{LINK DO PRODUTO}}
-
-INSTRUÇÕES:
-1. Use as informações fornecidas para preencher cada campo
-2. Seja persuasivo, criativo e chamativo
-3. Mantenha o formato EXATAMENTE como mostrado
-4. Use os preços e descontos reais do produto
-5. Inclua o link real do produto
-6. Crie 2-3 características principais marcantes
-7. Sugira onde/como usar o produto
-8. Se aplicável, sugira como presente ou ocasião especial
-
-Gere APENAS o texto formatado, sem explicações adicionais."""
+    prompt = GEMINI_MARKETING_PROMPT_TEMPLATE.format(product_description=product_description)  # Format template with product description
     
     # Try each API key in sequence until one succeeds
     last_error = None  # Store the last error for reporting
