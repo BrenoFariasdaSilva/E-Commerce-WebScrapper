@@ -320,7 +320,6 @@ class MercadoLivre:
                     f"{BackgroundColors.GREEN}Marked as international product: {self.product_data['name']}{Style.RESET_ALL}"
                 )  # Output the verbose message
         except Exception:  # If any error occurs during prefixing, skip it without changing the name
-            # Non-fatal: don't change name if prefixing fails
             pass
 
     def extract_current_price(self, soup):
@@ -332,21 +331,19 @@ class MercadoLivre:
         :return: Tuple of (integer_part, decimal_part) for current price
         """
         
-        # Find all price fractions - current price is typically the first one
-        price_fractions = soup.find_all(**HTML_SELECTORS["price_fraction"])
+        price_fractions = soup.find_all(**HTML_SELECTORS["price_fraction"])  # Find all price fractions - current price is typically the first one
         
-        if price_fractions and len(price_fractions) > 0:
-            first_fraction = price_fractions[0]
-            if isinstance(first_fraction, Tag):
-                integer_part = first_fraction.get_text(strip=True)
+        if price_fractions and len(price_fractions) > 0:  # If at least one price fraction is found
+            first_fraction = price_fractions[0]  # Get the first price fraction (current price)
+            if isinstance(first_fraction, Tag):  # If it's a valid Tag element
+                integer_part = first_fraction.get_text(strip=True)  # Extract the integer part of the price
                 
-                # Try to find cents near the fraction
-                parent = first_fraction.find_parent(class_=re.compile(r"andes-money-amount"))
-                if parent and isinstance(parent, Tag):
-                    cents = parent.find(**HTML_SELECTORS["current_price_cents"])
-                    decimal_part = cents.get_text(strip=True) if cents and isinstance(cents, Tag) else "00"
-                else:
-                    decimal_part = "00"
+                parent = first_fraction.find_parent(class_=re.compile(r"andes-money-amount"))  # Find the parent element that contains the price to locate the cents
+                if parent and isinstance(parent, Tag):  # If parent is found and is a Tag
+                    cents = parent.find(**HTML_SELECTORS["current_price_cents"])  # Find the cents element using the centralized selector
+                    decimal_part = cents.get_text(strip=True) if cents and isinstance(cents, Tag) else "00"  # Extract the decimal part or default to "00" if not found
+                else:  # If parent is not found, default to "00" for cents
+                    decimal_part = "00"  # Default to "00" if cents cannot be found
             else:
                 integer_part = "0"
                 decimal_part = "00"
@@ -365,7 +362,6 @@ class MercadoLivre:
         :return: Tuple of (integer_part, decimal_part) for old price
         """
         
-        # Find all price fractions - old price is typically the second one
         price_fractions = soup.find_all(**HTML_SELECTORS["price_fraction"])
         
         if len(price_fractions) > 1:  # If multiple prices found
@@ -373,7 +369,6 @@ class MercadoLivre:
             if isinstance(second_fraction, Tag):  # If it's a valid Tag
                 integer_part = second_fraction.get_text(strip=True)  # Extract integer part
                 
-                # Try to find cents near the fraction
                 parent = second_fraction.find_parent(class_=re.compile(r"andes-money-amount"))
                 if parent and isinstance(parent, Tag):  # If parent found
                     old_cents = parent.find(**HTML_SELECTORS["current_price_cents"])  # Find cents using centralized selector
@@ -627,12 +622,10 @@ class MercadoLivre:
         :return: BeautifulSoup object containing the parsed HTML
         """
         
-        # If we have stored HTML content (from local file), use it
         if self.html_content:
             soup = BeautifulSoup(self.html_content, "html.parser")
             return soup
         
-        # Otherwise, fetch from HTTP
         response = session.get(product_url, timeout=10)  # Make a GET request to the product URL
         response.raise_for_status()  # Raise exception for bad status
         soup = BeautifulSoup(response.text, "html.parser")  # Parse the HTML content (use str to satisfy type checkers)
@@ -651,37 +644,29 @@ class MercadoLivre:
         image_urls = []  # List to store image URLs
         seen_urls = set()  # Set to track unique URLs
         
-        # Find the gallery column container
         gallery_column = soup.find("div", **HTML_SELECTORS["gallery_column"])
         
         if gallery_column and isinstance(gallery_column, Tag):
-            # Find all gallery wrapper elements within the gallery column
             wrappers = gallery_column.find_all("span", **HTML_SELECTORS["gallery_wrapper"])
             
             for wrapper in wrappers:
                 if not isinstance(wrapper, Tag):
                     continue
                 
-                # Find figure element within wrapper
                 figure = wrapper.find("figure", **HTML_SELECTORS["gallery_figure"])
                 
                 if figure and isinstance(figure, Tag):
-                    # Check if this is a video (has clip-wrapper)
                     clip_wrapper = figure.find("section", **HTML_SELECTORS["clip_wrapper"])
                     if clip_wrapper:  # Skip videos, they'll be handled separately
                         continue
                     
-                    # Find image with data-zoom (high quality) or fallback to src
                     img = figure.find("img")
                     
                     if isinstance(img, Tag):
-                        # Prioritize data-zoom for highest quality
                         img_url = img.get("data-zoom") or img.get("src")
                         
                         if img_url and isinstance(img_url, str):
-                            # Clean and validate URL
                             if not img_url.startswith("data:") and not img_url.startswith("blob:"):
-                                # Normalize URL (remove query params for deduplication)
                                 base_url = img_url.split("?")[0]
                                 if base_url not in seen_urls:
                                     seen_urls.add(base_url)
@@ -709,14 +694,11 @@ class MercadoLivre:
         )
         
         try:  # Try to parse JSON data
-            # Find the script tag containing __PRELOADED_STATE__
             preloaded_state_script = soup.find("script", {"id": "__PRELOADED_STATE__"})
             
             if preloaded_state_script and preloaded_state_script.string:  # If script found
-                # Parse the JSON data
                 state_data = json.loads(preloaded_state_script.string)
                 
-                # Navigate to clips: pageState → initialState → components → gallery → clips → shorts
                 clips_data = (
                     state_data.get("pageState", {})
                     .get("initialState", {})
@@ -742,18 +724,15 @@ class MercadoLivre:
                     f"{BackgroundColors.YELLOW}__PRELOADED_STATE__ not found, checking HTML...{Style.RESET_ALL}"
                 )
                 
-                # Find the gallery column container
                 gallery_column = soup.find("div", **HTML_SELECTORS["gallery_column"])
                 
                 if gallery_column and isinstance(gallery_column, Tag):
-                    # Find all clip-wrapper sections
                     clip_wrappers = gallery_column.find_all("section", **HTML_SELECTORS["clip_wrapper"])
                     
                     for clip_wrapper in clip_wrappers:
                         if not isinstance(clip_wrapper, Tag):
                             continue
                         
-                        # Get thumbnail (videos are dynamically loaded)
                         thumbnail_url = None
                         thumbnail_img = clip_wrapper.find("img", class_="clip-wrapper__thumbnail")
                         if thumbnail_img and isinstance(thumbnail_img, Tag):
@@ -786,9 +765,7 @@ class MercadoLivre:
         """
         
         try:  # Try to download or copy the image
-            # Check if this is a local file path (when using local_html_path)
             if self.local_html_path and (img_url.startswith("./") or img_url.startswith("../") or not img_url.startswith(("http://", "https://"))):
-                # Resolve local file path relative to HTML file location
                 html_dir = os.path.dirname(os.path.abspath(self.local_html_path))
                 local_img_path = os.path.normpath(os.path.join(html_dir, img_url))
                 
@@ -798,7 +775,6 @@ class MercadoLivre:
                     )
                     return None
                 
-                # Get file extension
                 ext = os.path.splitext(local_img_path)[1]
                 if not ext:
                     ext = ".webp"
@@ -806,7 +782,6 @@ class MercadoLivre:
                 filename = f"image_{image_count:03d}{ext}"
                 filepath = os.path.join(output_dir, filename)
                 
-                # Copy local file to output directory
                 shutil.copy2(local_img_path, filepath)
                 
                 verbose_output(
@@ -815,7 +790,6 @@ class MercadoLivre:
                 
                 return filepath
             else:
-                # Download from HTTP URL
                 img_response = session.get(img_url, timeout=10)  # Download image
                 img_response.raise_for_status()  # Raise exception on bad status
                 
