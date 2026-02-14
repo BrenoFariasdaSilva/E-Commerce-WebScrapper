@@ -806,13 +806,14 @@ def validate_and_fix_output_file(file_path):
         return False  # Return failure
 
 
-def generate_marketing_text(product_description, description_file):
+def generate_marketing_text(product_description, description_file, product_data=None):
     """
     Generates marketing text from product description using Gemini AI.
     Supports multiple API keys with automatic failover on rate limit errors.
     
     :param product_description: The raw product description text
     :param description_file: Path to the description file (used to determine output directory)
+    :param product_data: Optional dictionary containing product information (e.g., is_international)
     :return: True if successful, False otherwise
     """
     
@@ -823,7 +824,21 @@ def generate_marketing_text(product_description, description_file):
         print(f"{BackgroundColors.RED}Error: No Gemini API keys configured in .env file.{Style.RESET_ALL}")
         return False  # Return failure
     
-    prompt = GEMINI_MARKETING_PROMPT_TEMPLATE.format(product_description=product_description)  # Format template with product description
+    is_international = product_data.get("is_international", False) if product_data else False  # Check if product is international
+    internacional_instruction = ""  # Initialize international instruction as empty
+    if is_international:  # If the product is international, we need to add a specific instruction to the prompt
+        internacional_instruction = "\n\n**IMPORTANTE**: Este produto é INTERNACIONAL. Você DEVE adicionar '[INTERNACIONAL] - ' antes do nome do produto no início do texto formatado."
+    
+    # Check if old price and discount are N/A
+    old_price_int = str(product_data.get("old_price_integer", "")).strip() if product_data else ""
+    old_price_dec = str(product_data.get("old_price_decimal", "")).strip() if product_data else ""
+    discount = str(product_data.get("discount_percentage", "")).strip() if product_data else ""
+    
+    no_discount_instruction = ""
+    if (old_price_int in ["N/A", ""] or old_price_dec in ["N/A", ""]) and discount in ["N/A", ""]:
+        no_discount_instruction = "\n\n**IMPORTANTE**: Este produto NÃO possui preço antigo ou desconto disponível. Você deve REMOVER as linhas de preço antigo (DE R$...) e desconto (🎟️...) do texto formatado. Mostre APENAS o preço atual."
+    
+    prompt = GEMINI_MARKETING_PROMPT_TEMPLATE.format(product_description=product_description) + internacional_instruction + no_discount_instruction  # Format template with all instructions
     
     # Try each API key in sequence until one succeeds
     last_error = None  # Store the last error for reporting
@@ -1079,7 +1094,7 @@ def main():
 
         print(f"{BackgroundColors.CYAN}Step 2{BackgroundColors.GREEN}: Formatting with Gemini AI{Style.RESET_ALL}")  # Step 2: Format the product description with Gemini AI
         
-        success = generate_marketing_text(product_description, description_file)  # Generate marketing text
+        success = generate_marketing_text(product_description, description_file, product_data)  # Generate marketing text with product data
         
         if success:  # If both scraping and formatting succeeded
             # Step 3: Validate and fix the generated output file
