@@ -468,7 +468,9 @@ class MercadoLivre:
             
             self.product_data["name"] = self.extract_product_name(soup)  # Extract product name
 
-            if self.detect_international(soup):  # Detect if the product is marked as international
+            is_international = self.detect_international(soup)  # Detect if the product is marked as international
+            self.product_data["is_international"] = is_international  # Store international flag
+            if is_international:  # If the product is international
                 self.prefix_international_name()  # Prefix the product name if it's international
             
             current_price_int, current_price_dec = self.extract_current_price(soup)  # Extract current price
