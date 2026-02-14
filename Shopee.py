@@ -65,6 +65,8 @@ import datetime  # Handle date and time operations
 import os  # Interact with operating system functionalities
 import platform  # Access underlying platform information
 import re  # Perform regular expression operations
+import shutil  # For copying files (local HTML mode)
+import subprocess  # For running external commands (ffmpeg)
 import sys  # Access system-specific parameters and functions
 import time  # Provide time-related functions for delays
 from bs4 import BeautifulSoup, Tag  # Parse and navigate HTML documents
