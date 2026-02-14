@@ -608,8 +608,9 @@ class Shein:
     def extract_product_description(self, soup=None):
         """
         Extracts the product description from the parsed HTML soup.
-        Tries HTML extraction from class="product-intro__attr-list-text".
-
+        First tries HTML extraction from class="product-intro__attr-list-text",
+        then tries structured specification table extraction from common-entry__content.
+        
         :param soup: BeautifulSoup object containing the parsed HTML
         :return: Product description string or "No description available" if not found
         """
@@ -617,17 +618,48 @@ class Shein:
         if soup is None:  # Guard against None to avoid attribute access on None
             return "No description available"  # Default description when no soup provided
         
-        for tag, attrs in HTML_SELECTORS["description"]:  # Iterate through each selector combination from centralized dictionary
-            description_element = soup.find(tag, attrs if attrs else None)  # Search for element matching current selector
-            if description_element:  # Verify if matching element was found
-                description = description_element.get_text(strip=True)  # Extract and clean text content from element
-                if description and len(description) > 10:  # Validate that description has substantial content
-                    verbose_output(f"{BackgroundColors.GREEN}Description found from HTML ({len(description)} chars).{Style.RESET_ALL}")  # Log successfully extracted description with character count
-                    return description  # Return the product description
-        
-        verbose_output(f"{BackgroundColors.YELLOW}HTML description not found, trying JSON extraction...{Style.RESET_ALL}")
-        
-        return "No description available"  # Return default message when description is not found
+        for tag, attrs in HTML_SELECTORS["description"]:  # Iterate through description selectors
+            description_element = soup.find(tag, attrs if attrs else None)  # Find element for each selector
+            if description_element:  # If an element was found
+                description = description_element.get_text(strip=True)  # Extract and strip text
+                if description and len(description) > 10:  # If description is sufficiently long
+                    verbose_output(f"{BackgroundColors.GREEN}Description found from HTML ({len(description)} chars).{Style.RESET_ALL}")  # Log success
+                    return description  # Return HTML description
+
+        verbose_output(f"{BackgroundColors.YELLOW}HTML description not found, trying structured specification extraction...{Style.RESET_ALL}")  # Notify about next fallback
+
+        try:  # Attempt structured specification extraction
+            spec_container = soup.find("div", class_="common-entry__content")  # Locate main specs container
+            if spec_container:  # If container exists
+                content_box = spec_container.find("div", class_="shop-entry__contentBox")  # Find inner content box
+                if content_box:  # If content box exists
+                    specifications = []  # Collect valid label:value pairs
+
+                    children = content_box.find_all(recursive=False)  # Iterate direct children only
+                    for child in children:  # For each child element
+                        text_nodes = [text.strip() for text in child.stripped_strings if text.strip()]  # Gather non-empty text nodes
+
+                        if len(text_nodes) >= 2:  # Expect at least label and value
+                            label = text_nodes[0]  # First meaningful node is label
+                            value = text_nodes[1]  # Second meaningful node is value
+
+                            noise_keywords = ["Classificação", "Itens", "Seguidores", "pago", "seguido", "está navegando"]  # Noise filters
+                            if len(label) > 2 and len(value) > 0:  # Basic validation
+                                if not any(keyword.lower() in label.lower() for keyword in noise_keywords):  # Exclude noisy labels
+                                    specifications.append(f"{label}: {value}")  # Append formatted pair
+
+                    if len(specifications) >= 3:  # Require at least 3 pairs to accept
+                        description = "\n".join(specifications)  # Join pairs with newline
+                        verbose_output(f"{BackgroundColors.GREEN}Structured specifications extracted successfully ({len(description)} characters).{Style.RESET_ALL}")  # Log success
+                        return description  # Return structured description
+                    else:
+                        verbose_output(f"{BackgroundColors.YELLOW}Found only {len(specifications)} specifications, need at least 3. Continuing to JSON extraction...{Style.RESET_ALL}")  # Not enough pairs
+        except Exception as e:  # Catch and log extraction errors
+            verbose_output(f"{BackgroundColors.YELLOW}Error extracting structured specifications: {e}{Style.RESET_ALL}")
+
+        verbose_output(f"{BackgroundColors.YELLOW}Structured specification extraction failed, trying JSON extraction...{Style.RESET_ALL}")  # Proceed to JSON fallback
+
+        return "No description available"  # Return default when no description found
 
 
     def detect_international(self, soup=None) -> bool:
