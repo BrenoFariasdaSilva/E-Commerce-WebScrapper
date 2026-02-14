@@ -635,6 +635,58 @@ class MercadoLivre:
         
         return soup  # Return the parsed soup
 
+    def find_image_urls(self, soup):
+        """
+        Finds all valid image URLs from the product gallery column.
+        Prioritizes high-quality images from data-zoom attribute.
+        
+        :param soup: BeautifulSoup object containing the parsed HTML
+        :return: List of valid image URLs
+        """
+        
+        image_urls = []  # List to store image URLs
+        seen_urls = set()  # Set to track unique URLs
+        
+        # Find the gallery column container
+        gallery_column = soup.find("div", **HTML_SELECTORS["gallery_column"])
+        
+        if gallery_column and isinstance(gallery_column, Tag):
+            # Find all gallery wrapper elements within the gallery column
+            wrappers = gallery_column.find_all("span", **HTML_SELECTORS["gallery_wrapper"])
+            
+            for wrapper in wrappers:
+                if not isinstance(wrapper, Tag):
+                    continue
+                
+                # Find figure element within wrapper
+                figure = wrapper.find("figure", **HTML_SELECTORS["gallery_figure"])
+                
+                if figure and isinstance(figure, Tag):
+                    # Check if this is a video (has clip-wrapper)
+                    clip_wrapper = figure.find("section", **HTML_SELECTORS["clip_wrapper"])
+                    if clip_wrapper:  # Skip videos, they'll be handled separately
+                        continue
+                    
+                    # Find image with data-zoom (high quality) or fallback to src
+                    img = figure.find("img")
+                    
+                    if isinstance(img, Tag):
+                        # Prioritize data-zoom for highest quality
+                        img_url = img.get("data-zoom") or img.get("src")
+                        
+                        if img_url and isinstance(img_url, str):
+                            # Clean and validate URL
+                            if not img_url.startswith("data:") and not img_url.startswith("blob:"):
+                                # Normalize URL (remove query params for deduplication)
+                                base_url = img_url.split("?")[0]
+                                if base_url not in seen_urls:
+                                    seen_urls.add(base_url)
+                                    image_urls.append(img_url)  # Keep full URL with params
+        
+        verbose_output(
+            f"{BackgroundColors.GREEN}Found {BackgroundColors.CYAN}{len(image_urls)}{BackgroundColors.GREEN} unique images in gallery column.{Style.RESET_ALL}"
+        )
+
     def create_product_description_file(self, product_data, output_dir, product_name_safe, url):
         """
         Creates a text file with product description and details.
@@ -697,7 +749,7 @@ class MercadoLivre:
                 f"{BackgroundColors.YELLOW}Warning: Could not create product description file: {e}{Style.RESET_ALL}"
             )  # Output warning
             return None  # Return None on failure
-    
+
     def scrape(self, verbose=VERBOSE):
         """
         Main scraping method that orchestrates the entire scraping process.
