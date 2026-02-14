@@ -563,9 +563,7 @@ def resolve_local_html_path(local_html_path):
                 print(f"{BackgroundColors.GREEN}Resolved path variation: {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}")  # Inform user about resolution
                 return test_path  # Return resolved path
     
-    # If path ends with .html, the HTML file might not exist but the base directory or zip might
     if local_html_path.lower().endswith('.html'):  # Check if path ends with .html extension
-        # Extract the base path by removing the /filename.html portion
         last_slash_idx = local_html_path.rfind('/')  # Find the last slash in the path
         if last_slash_idx != -1:  # If there's a slash, we can extract base path
             base_path = local_html_path[:last_slash_idx]  # Remove /filename.html to get base directory path
@@ -575,7 +573,6 @@ def resolve_local_html_path(local_html_path):
                 f"{BackgroundColors.YELLOW}HTML file not found. Attempting to resolve base path: {BackgroundColors.CYAN}{base_path}{Style.RESET_ALL}"
             )  # End of verbose output call
             
-            # Try the base path as a directory or zip file
             base_variations = [  # List of base path variations to try
                 base_path,  # Try as directory
                 f"./Inputs/{base_path}",  # Try with Inputs prefix as directory
@@ -585,7 +582,6 @@ def resolve_local_html_path(local_html_path):
             
             for test_path in base_variations:  # Iterate through base path variations
                 if verify_filepath_exists(test_path):  # If base path variation exists
-                    # If it's a directory, construct the resolved HTML path
                     if os.path.isdir(test_path):  # Check if it's a directory
                         resolved_html_path = os.path.join(test_path, html_filename)  # Reconstruct full HTML file path
                         print(f"{BackgroundColors.GREEN}Resolved base directory: {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}")  # Inform about directory resolution
@@ -779,13 +775,10 @@ def validate_and_fix_output_file(file_path):
         
         original_content = content  # Store original content for comparison
         
-        # Fix 1: Replace multiple consecutive empty lines with single empty line
         content = re.sub(r'\n\n\n+', '\n\n', content)  # Replace 3 or more newlines with exactly 2
         
-        # Fix 2: Replace multiple consecutive spaces with single space
         content = re.sub(r' {2,}', ' ', content)  # Replace 2 or more spaces with single space
         
-        # Fix 3: Replace multiple consecutive asterisks with single asterisk
         content = re.sub(r'\*{2,}', '*', content)  # Replace 2 or more asterisks with single asterisk
         
         if content != original_content:  # If any fixes were applied
@@ -829,7 +822,6 @@ def generate_marketing_text(product_description, description_file, product_data=
     if is_international:  # If the product is international, we need to add a specific instruction to the prompt
         internacional_instruction = "\n\n**IMPORTANTE**: Este produto é INTERNACIONAL. Você DEVE adicionar '[INTERNACIONAL] - ' antes do nome do produto no início do texto formatado."
     
-    # Check if old price and discount are N/A
     old_price_int = str(product_data.get("old_price_integer", "")).strip() if product_data else ""
     old_price_dec = str(product_data.get("old_price_decimal", "")).strip() if product_data else ""
     discount = str(product_data.get("discount_percentage", "")).strip() if product_data else ""
@@ -840,7 +832,6 @@ def generate_marketing_text(product_description, description_file, product_data=
     
     prompt = GEMINI_MARKETING_PROMPT_TEMPLATE.format(product_description=product_description) + internacional_instruction + no_discount_instruction  # Format template with all instructions
     
-    # Try each API key in sequence until one succeeds
     last_error = None  # Store the last error for reporting
     for key_index, api_key in enumerate(api_keys, 1):  # Iterate through API keys
         try:  # Try to generate marketing text with current key
@@ -1097,7 +1088,6 @@ def main():
         success = generate_marketing_text(product_description, description_file, product_data)  # Generate marketing text with product data
         
         if success:  # If both scraping and formatting succeeded
-            # Step 3: Validate and fix the generated output file
             description_dir = os.path.dirname(description_file)  # Get directory of description file
             template_file = os.path.join(description_dir, "Template.txt")  # Path to the generated template file
             validate_and_fix_output_file(template_file)  # Validate and fix formatting issues in the output file
