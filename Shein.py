@@ -375,6 +375,66 @@ class Shein:
             return None  # Return None to indicate reading failed
 
 
+    def download_single_image(self, image_url: str, output_dir: str, index: int) -> Optional[str]:
+        """
+        Downloads a single product image from URL or copies from local path.
+        Supports both online (HTTP) and offline (local file) modes.
+
+        :param image_url: URL or relative path of the image
+        :param output_dir: Directory where the image should be saved
+        :param index: Index number for the image filename
+        :return: Path to the downloaded image file, or None if download failed
+        """
+        
+        try:
+            if self.local_html_path and not image_url.startswith(("http://", "https://")):
+                local_html_dir = os.path.dirname(self.local_html_path)
+                source_path = os.path.join(local_html_dir, image_url.lstrip("./"))
+                
+                if not os.path.exists(source_path):
+                    verbose_output(f"{BackgroundColors.RED}Local image file not found: {source_path}{Style.RESET_ALL}")
+                    return None
+                
+                _, ext = os.path.splitext(source_path)
+                if not ext:
+                    ext = ".jpg"  # Default extension
+                
+                dest_path = os.path.join(output_dir, f"image_{index:02d}{ext}")
+                
+                shutil.copy2(source_path, dest_path)
+                verbose_output(f"{BackgroundColors.GREEN}Copied local image {index} to {dest_path}{Style.RESET_ALL}")
+                return dest_path
+            
+            else:
+                response = requests.get(image_url, timeout=30)
+                response.raise_for_status()
+                
+                ext = os.path.splitext(urlparse(image_url).path)[1]
+                if not ext or ext not in [".jpg", ".jpeg", ".png", ".webp", ".gif"]:
+                    content_type = response.headers.get("content-type", "")
+                    if "jpeg" in content_type or "jpg" in content_type:
+                        ext = ".jpg"
+                    elif "png" in content_type:
+                        ext = ".png"
+                    elif "webp" in content_type:
+                        ext = ".webp"
+                    elif "gif" in content_type:
+                        ext = ".gif"
+                    else:
+                        ext = ".jpg"  # Default
+                
+                dest_path = os.path.join(output_dir, f"image_{index:02d}{ext}")
+                with open(dest_path, "wb") as f:
+                    f.write(response.content)
+                
+                verbose_output(f"{BackgroundColors.GREEN}Downloaded image {index} to {dest_path}{Style.RESET_ALL}")
+                return dest_path
+        
+        except Exception as e:
+            verbose_output(f"{BackgroundColors.RED}Error downloading image {index}: {e}{Style.RESET_ALL}")
+            return None
+
+
     def download_single_video(self, video_url: str, output_dir: str, index: int) -> Optional[str]:
         """
         Downloads a single product video from URL or copies from local path.
