@@ -4,6 +4,8 @@
 
 # Template Files
 main-template.py
+class_block_functions_committer.py
+standalone_comments_cleaner.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
