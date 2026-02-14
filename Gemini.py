@@ -179,7 +179,8 @@ class Gemini:
     This class provides methods to configure the model, read input files,
     start chat sessions, send messages, and write outputs using the google.genai SDK.
     """
-    
+
+
     def __init__(self, api_key):
         """
         Initialize the Gemini class with an API key.
@@ -193,6 +194,7 @@ class Gemini:
         self.client = genai.Client(api_key=api_key)  # Create the Gemini client
         self.model = "gemini-2.5-flash"  # Latest free model currently
         self.chat = None  # Placeholder for chat session
+
 
     def read_input_file(self, file_path=INPUT_FILE):
         """
@@ -215,6 +217,7 @@ class Gemini:
         
         return content  # Return the content of the file
 
+
     def start_chat_session(self):
         """
         Start a chat session with the model.
@@ -226,6 +229,7 @@ class Gemini:
         
         self.chat = self.client.chats.create(model=self.model)  # Create a new chat session
         return self.chat  # Return the chat session
+
 
     def send_message(self, message, config=None):
         """
@@ -245,6 +249,7 @@ class Gemini:
         response = self.chat.send_message(message)  # Send the message
         return response.text  # Return the output text
 
+
     def generate_content(self, prompt, config=None):
         """
         Generate content without maintaining chat history (stateless).
@@ -263,6 +268,7 @@ class Gemini:
         )  # Generate content
         return response.text  # Return the generated text
 
+
     def write_output_to_file(self, output, file_path=OUTPUT_FILE):
         """
         Writes the chat output to a specified file.
@@ -276,6 +282,7 @@ class Gemini:
         
         with open(file_path, "w", encoding="utf-8") as file:  # Open the file for writing with UTF-8
             file.write(output)  # Write the output to the file
+
 
     def close(self):
         """
