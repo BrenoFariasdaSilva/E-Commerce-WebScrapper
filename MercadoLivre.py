@@ -613,6 +613,27 @@ class MercadoLivre:
         
         return output_dir  # Return the output directory path
 
+    def fetch_product_page(self, session, product_url):
+        """
+        Fetches the product page and returns the parsed BeautifulSoup object.
+        Supports both HTTP fetching and local HTML file reading.
+        
+        :param session: Requests session object
+        :param product_url: URL of the product page
+        :return: BeautifulSoup object containing the parsed HTML
+        """
+        
+        # If we have stored HTML content (from local file), use it
+        if self.html_content:
+            soup = BeautifulSoup(self.html_content, "html.parser")
+            return soup
+        
+        # Otherwise, fetch from HTTP
+        response = session.get(product_url, timeout=10)  # Make a GET request to the product URL
+        response.raise_for_status()  # Raise exception for bad status
+        soup = BeautifulSoup(response.text, "html.parser")  # Parse the HTML content (use str to satisfy type checkers)
+        
+        return soup  # Return the parsed soup
 
     def create_product_description_file(self, product_data, output_dir, product_name_safe, url):
         """
