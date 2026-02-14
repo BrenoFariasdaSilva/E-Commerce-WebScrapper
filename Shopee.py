@@ -119,6 +119,8 @@ HTML_SELECTORS = {
         ("div", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Generic description pattern fallback
         ("section", {"class": re.compile(r".*description.*", re.IGNORECASE)}),  # Section element containing description as last resort fallback
     ],
+    "gallery": {"class": "airUhU"},  # CSS selector for product gallery container with images and videos
+    "detail_label": {"class": "VJOnTD"},  # CSS selector for product detail labels (used for Category, Country of Origin, etc.)
 }  # Dictionary containing all HTML selectors used for scraping product information
 
 # Output Directory Constants:
