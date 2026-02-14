@@ -374,6 +374,68 @@ class Shein:
             print(f"{BackgroundColors.RED}Error reading local HTML file: {e}{Style.RESET_ALL}")  # Alert user about file reading error
             return None  # Return None to indicate reading failed
 
+    def extract_current_price(self, soup=None):
+        """
+        Extracts the current price from the parsed HTML soup.
+        PRIMARY: JSON promotionInfoPrice.amountWithSymbol extraction
+        FALLBACK: HTML extraction
+
+        :param soup: BeautifulSoup object containing the parsed HTML
+        :return: Tuple of (integer_part, decimal_part) for current price
+        """
+
+        if soup is None:  # Guard against None to avoid attribute access on None
+            return "0", "00"  # Default price when no soup provided
+        
+        verbose_output(f"{BackgroundColors.GREEN}Trying JSON extraction for current price...{Style.RESET_ALL}")
+        
+        try:
+            script_tags = soup.find_all("script", {"type": "application/json"})
+            for script_tag in script_tags:
+                try:
+                    if not script_tag.string:  # Skip if no content
+                        continue
+                    
+                    json_data = json.loads(script_tag.string)  # Parse JSON data
+                    
+                    if isinstance(json_data, dict):
+                        promo_price = json_data.get("promotionInfoPrice", {})
+                        if not promo_price and "detail" in json_data:
+                            promo_price = json_data.get("detail", {}).get("promotionInfoPrice", {})
+                        
+                        amount_with_symbol = promo_price.get("amountWithSymbol", "")
+                        
+                        if amount_with_symbol and isinstance(amount_with_symbol, str):
+                            match = re.search(r"(\d+)[,.](\d{2})", amount_with_symbol)
+                            if match:
+                                integer_part = match.group(1)
+                                decimal_part = match.group(2)
+                                verbose_output(f"{BackgroundColors.GREEN}Current price from JSON: R${integer_part},{decimal_part}{Style.RESET_ALL}")
+                                return integer_part, decimal_part
+                
+                except (json.JSONDecodeError, AttributeError, TypeError, KeyError):
+                    continue  # Skip invalid or incompatible JSON
+        
+        except Exception as e:
+            verbose_output(f"{BackgroundColors.YELLOW}Error extracting current price from JSON: {e}{Style.RESET_ALL}")
+        
+        verbose_output(f"{BackgroundColors.YELLOW}JSON current price not found, trying HTML extraction...{Style.RESET_ALL}")
+        
+        for tag, attrs in HTML_SELECTORS["current_price"]:  # Iterate through each selector combination from centralized dictionary
+            price_element = soup.find(tag, attrs if attrs else None)  # Search for element matching current selector
+            if price_element:  # Verify if matching element was found
+                price_text = price_element.get_text(strip=True)  # Extract and clean text content from element
+                match = re.search(r"(\d+)[,.](\d{2})", price_text)  # Search for price pattern with integer and decimal parts
+                if match:  # Verify if price pattern was found in text
+                    integer_part = match.group(1)  # Extract integer part of price
+                    decimal_part = match.group(2)  # Extract decimal part of price
+                    verbose_output(f"{BackgroundColors.GREEN}Current price from HTML: R${integer_part},{decimal_part}{Style.RESET_ALL}")  # Log successfully extracted current price
+                    return integer_part, decimal_part  # Return price components as tuple
+        
+        verbose_output(f"{BackgroundColors.YELLOW}Current price not found, using default.{Style.RESET_ALL}")  # Warn that current price could not be extracted
+        return "0", "00"  # Return default zero price when extraction fails
+
+
     def extract_old_price(self, soup=None, current_price_int="0", current_price_dec="00", discount_percentage="N/A"):
         """
         Extracts the old price from the parsed HTML soup.
