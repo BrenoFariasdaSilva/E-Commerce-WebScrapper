@@ -62,9 +62,13 @@ Assumptions & Notes:
 
 import atexit  # For playing a sound when the program finishes
 import datetime  # For getting the current date and time
+import json  # For parsing JSON data from script tags
 import os  # For running a command in the terminal
 import platform  # For getting the operating system name
 import re  # For regular expressions
+import requests  # For downloading images and videos from URLs
+import shutil  # For copying local files
+import subprocess  # For running ffmpeg commands
 import sys  # For system-specific parameters and functions
 import time  # For delays during page rendering
 from bs4 import BeautifulSoup, Tag  # For parsing HTML content
