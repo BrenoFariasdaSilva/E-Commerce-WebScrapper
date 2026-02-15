@@ -417,7 +417,7 @@ def remove_duplicate_images(groups):
                     print(f"{BackgroundColors.RED}Error removing image {BackgroundColors.CYAN}{img_path}{BackgroundColors.RED}: {BackgroundColors.YELLOW}{e}{Style.RESET_ALL}")
 
 
-def clean_duplicate_images(product_directory):
+def clean_duplicate_images(product_directory, base_output_dir=OUTPUT_DIRECTORY):
     """
     Cleans up duplicate images in the product directory by normalizing all images to the smallest size,
     computing MD5 hashes of the resized versions, and removing lower-resolution duplicates while keeping
@@ -427,10 +427,11 @@ def clean_duplicate_images(product_directory):
     such as thumbnails and full-size images.
 
     :param product_directory: Directory name (may include platform prefix) for the product
+    :param base_output_dir: Base output directory path (defaults to OUTPUT_DIRECTORY constant)
     :return: None
     """
     
-    product_dir = os.path.join(OUTPUT_DIRECTORY, product_directory)  # Path to the product directory
+    product_dir = os.path.join(base_output_dir, product_directory)  # Path to the product directory using provided base directory
     if not os.path.exists(product_dir):  # If the product directory does not exist
         return  # Return if the directory does not exist
     
@@ -447,17 +448,18 @@ def clean_duplicate_images(product_directory):
     remove_duplicate_images(groups)  # Remove duplicate images
 
 
-def exclude_small_images(product_directory, min_size_bytes=2048):
+def exclude_small_images(product_directory, base_output_dir=OUTPUT_DIRECTORY, min_size_bytes=2048):
     """
     Excludes (deletes) image files smaller than the specified minimum size in bytes.
     This helps remove very small or corrupted images that are likely thumbnails or placeholders.
 
     :param product_directory: Directory name (may include platform prefix) for the product
+    :param base_output_dir: Base output directory path (defaults to OUTPUT_DIRECTORY constant)
     :param min_size_bytes: Minimum file size in bytes (default 2048 = 2KB)
     :return: None
     """
     
-    product_dir = os.path.join(OUTPUT_DIRECTORY, product_directory)  # Path to the product directory
+    product_dir = os.path.join(base_output_dir, product_directory)  # Path to the product directory using provided base directory
     
     if not os.path.exists(product_dir):  # If the product directory does not exist
         return  # Return if the directory does not exist
@@ -529,6 +531,56 @@ def sanitize_filename(filename):
     filename = re.sub(r'[<>:"/\\|?*]', '_', filename)  # Replace characters invalid for filenames with underscore
     filename = re.sub(r"\s+", " ", filename).strip()  # Collapse multiple whitespace into single spaces
     return filename  # Return sanitized filename
+
+
+def get_next_run_index(base_output_dir, today_str):
+    """
+    Determines the next run index for the current day by scanning existing timestamped directories.
+    
+    :param base_output_dir: The base output directory to scan for existing runs
+    :param today_str: The current date string in YYYY-MM-DD format
+    :return: The next incremental run index (integer starting from 1)
+    """
+    
+    if not os.path.exists(base_output_dir):  # Check if base output directory exists
+        return 1  # Return 1 as first run index if directory doesn't exist yet
+    
+    max_index = 0  # Initialize maximum index counter to zero
+    pattern = re.compile(r'^(\d+)\. (\d{4}-\d{2}-\d{2}) - \d{2}:\d{2}:\d{2}$')  # Regex pattern to match directory format: "index. YYYY-MM-DD - HH:MM:SS"
+    
+    for item in os.listdir(base_output_dir):  # Iterate through all items in base output directory
+        item_path = os.path.join(base_output_dir, item)  # Construct full path to item
+        if os.path.isdir(item_path):  # Check if item is a directory
+            match = pattern.match(item)  # Try to match directory name against pattern
+            if match:  # If directory name matches the expected format
+                index = int(match.group(1))  # Extract run index from first capture group
+                date_str = match.group(2)  # Extract date string from second capture group
+                if date_str == today_str:  # Check if directory is from today
+                    max_index = max(max_index, index)  # Update max_index if current index is higher
+    
+    return max_index + 1  # Return next incremental index (max found + 1)
+
+
+def create_timestamped_output_directory(base_output_dir):
+    """
+    Creates a timestamped output directory with incremental daily run index.
+    
+    :param base_output_dir: The base output directory path (e.g., "./Outputs/")
+    :return: Path to the created timestamped subdirectory
+    """
+    
+    now = datetime.datetime.now()  # Get current date and time
+    today_str = now.strftime("%Y-%m-%d")  # Format date as YYYY-MM-DD string
+    time_str = now.strftime("%H:%M:%S")  # Format time as HH:MM:SS string
+    
+    run_index = get_next_run_index(base_output_dir, today_str)  # Get next run index for today
+    
+    dir_name = f"{run_index}. {today_str} - {time_str}"  # Construct directory name with index, date, and time
+    timestamped_dir = os.path.join(base_output_dir, dir_name)  # Construct full path to timestamped directory
+    
+    os.makedirs(timestamped_dir, exist_ok=True)  # Create timestamped directory including any missing parent directories
+    
+    return timestamped_dir  # Return path to created timestamped directory
 
 
 def detect_platform(url):
@@ -656,12 +708,13 @@ def resolve_local_html_path(local_html_path):
     return local_html_path  # Return original path even if not found
 
 
-def scrape_product(url, local_html_path=None):
+def scrape_product(url, timestamped_output_dir, local_html_path=None):
     """
     Scrapes product information from a URL by detecting the platform and using the appropriate scraper.
     Supports both online scraping (via browser) and offline scraping (from local HTML file).
     
     :param url: The product URL to scrape
+    :param timestamped_output_dir: The timestamped output directory for this run
     :param local_html_path: Optional path to a local HTML file for offline scraping
     :return: Tuple of (product_data dict, description_file path, product_directory string, html_path_for_assets string, zip_path string, extracted_dir string) or (None, None, None, None, None, None) on failure
     """
@@ -713,7 +766,7 @@ def scrape_product(url, local_html_path=None):
     platform_prefix = PLATFORM_PREFIXES.get(platform, "")  # Get the platform prefix for output directory naming
     
     try:  # Try to scrape the product
-        scraper = scraper_class(url, local_html_path=html_path, prefix=platform_prefix)  # Create scraper instance with optional local HTML path and platform prefix
+        scraper = scraper_class(url, local_html_path=html_path, prefix=platform_prefix, output_directory=timestamped_output_dir)  # Create scraper instance with timestamped output directory
         product_data = scraper.scrape()  # Scrape the product
         
         if not product_data:  # If scraping failed
@@ -726,7 +779,7 @@ def scrape_product(url, local_html_path=None):
         product_name = product_data.get("name", "Unknown Product")  # Get product name
         product_name_safe = sanitize_filename(product_name)  # Sanitize filename
         product_directory = f"{platform_prefix}{PLATFORM_PREFIX_SEPARATOR}{product_name_safe}" if platform_prefix else product_name_safe  # Construct directory name with platform prefix
-        description_file = f"./Outputs/{product_directory}/{product_name_safe}_description.txt"  # Construct full path to description file using prefixed directory
+        description_file = f"{timestamped_output_dir}/{product_directory}/{product_name_safe}_description.txt"  # Construct full path to description file using timestamped directory
         
         if not verify_filepath_exists(description_file):  # If description file not found
             print(f"{BackgroundColors.RED}Description file not found: {description_file}{Style.RESET_ALL}")
@@ -1081,9 +1134,11 @@ def main():
     
     create_directory(
         os.path.abspath(OUTPUT_DIRECTORY), OUTPUT_DIRECTORY.replace(".", "")
-    )  # Create the output directory
+    )  # Create the base output directory
     
-    clean_unknown_product_directories(OUTPUT_DIRECTORY)  # Clean up any "Unknown Product" directories from previous runs
+    timestamped_output_dir = create_timestamped_output_directory(OUTPUT_DIRECTORY)  # Create timestamped subdirectory for this run
+    
+    clean_unknown_product_directories(timestamped_output_dir)  # Clean up any "Unknown Product" directories from current run
     
     successful_scrapes = 0  # Counter for successful operations
 
@@ -1117,7 +1172,7 @@ def main():
                 verbose_output(f"{BackgroundColors.GREEN}Using local HTML file: {BackgroundColors.CYAN}{local_html_path}{Style.RESET_ALL}")  # Inform user about offline mode
 
             verbose_output(f"{BackgroundColors.CYAN}Step 1{BackgroundColors.GREEN}: Scraping the product information{Style.RESET_ALL}")  # Step 1: Scrape the product information
-            scrape_result = scrape_product(url, local_html_path)  # Scrape the product with optional local HTML path
+            scrape_result = scrape_product(url, timestamped_output_dir, local_html_path)  # Scrape the product with timestamped output directory and optional local HTML path
         
             if not scrape_result or len(scrape_result) != 6:  # If scraping failed or returned invalid result
                 print(f"{BackgroundColors.RED}Skipping {BackgroundColors.CYAN}{url}{BackgroundColors.RED} due to scraping failure.{Style.RESET_ALL}\n")
@@ -1126,8 +1181,8 @@ def main():
             product_data, description_file, product_directory, html_path_for_assets, zip_path_to_cleanup, extracted_dir_to_cleanup = scrape_result  # Unpack the scrape result
             
             if product_directory and isinstance(product_directory, str):  # If product directory is valid
-                clean_duplicate_images(product_directory)  # Clean up duplicate images in the product directory
-                exclude_small_images(product_directory)  # Exclude images smaller than 2KB
+                clean_duplicate_images(product_directory, timestamped_output_dir)  # Clean up duplicate images in the product directory using timestamped output directory
+                exclude_small_images(product_directory, timestamped_output_dir)  # Exclude images smaller than 2KB using timestamped output directory
             
             if extracted_dir_to_cleanup and os.path.exists(extracted_dir_to_cleanup):  # If extraction occurred and directory exists
                 try:  # Try to clean up the extracted directory
