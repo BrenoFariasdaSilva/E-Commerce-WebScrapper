@@ -287,13 +287,16 @@ class MercadoLivre:
         
         name_element = soup.find(**HTML_SELECTORS["product_name"])  # Find the product name element using centralized selector
         if name_element:  # Verify if matching element was found
-            raw_product_name = name_element.get_text(strip=True)  # Extract raw text from the found element
-            product_name = re.sub(r'[<>:"/\\|?*]', '_', raw_product_name.title())  # Create a safe filename by replacing invalid characters and applying title case for better formatting
-            
+            raw_product_name = name_element.get_text(separator=" ", strip=True)  # Extract raw text, preserve single spaces between parts
+            raw_product_name = raw_product_name.replace("\u00A0", " ")  # Replace NBSP with normal space
+            raw_product_name = re.sub(r"\s+", " ", raw_product_name).strip()  # Collapse multiple whitespace to single spaces
+            product_name = re.sub(r'[<>:"/\\|?*]', "_", raw_product_name.title())  # Sanitize filename by replacing invalid characters and title-casing
+            product_name = re.sub(r"\s+", " ", product_name).strip()  # Ensure no repeated spaces after title-casing
+
             verbose_output(
                 f"{BackgroundColors.GREEN}Product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}"
             )  # Output the verbose message
-            return product_name  # Return the title-cased product name immediately when found
+            return product_name  # Return the sanitized, title-cased product name immediately when found
         
         verbose_output(  # Warn that product name could not be extracted
             f"{BackgroundColors.YELLOW}Product name not found, using default.{Style.RESET_ALL}"
