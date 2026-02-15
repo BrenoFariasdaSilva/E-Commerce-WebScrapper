@@ -758,23 +758,33 @@ def verify_affiliate_url_format(url):
         if not matched:  # If URL does not match affiliate pattern
             msg = f"{BackgroundColors.YELLOW}Warning: URL is not in the expected affiliate format for {platform_id}: {BackgroundColors.CYAN}{url}{Style.RESET_ALL}"  # Warning message to display
             try:  # Try writing directly to the original stdout to ensure visibility
-                if getattr(sys, "__stdout__", None) is not None:  # If original stdout is available
-                    sys.__stdout__.write(msg + "\n")  # Write message to original stdout
-                    sys.__stdout__.flush()  # Flush immediately
+                original_stdout = getattr(sys, "__stdout__", None)  # Get the original stdout stream
+                if original_stdout is not None and hasattr(original_stdout, "write"):  # Verify original stdout is available and has write method
+                    try:  # Try to write the message directly to the original stdout
+                        original_stdout.write(msg + "\n")  # Write message to original stdout
+                        if hasattr(original_stdout, "flush"):  # If original stdout has a flush method, flush it to ensure the message is displayed immediately
+                            original_stdout.flush()  # Flush immediately if available
+                    except Exception:  # If writing to original stdout fails for any reason, fallback to print
+                        print(msg)  # Fallback to print if writing to original stdout fails
                 else:  # Fallback to regular print if original stdout not available
                     print(msg)  # Print to current stdout
-            except Exception:  # If direct write fails for any reason
+            except Exception:  # If direct attribute access fails for any reason
                 print(msg)  # Fallback to print
         return matched  # Return boolean indicating match
     except re.error:  # If the pattern is invalid
         msg = f"{BackgroundColors.YELLOW}Warning: invalid affiliate regex for {platform_id}.{Style.RESET_ALL}"  # Invalid-regex warning message
         try:  # Try writing directly to the original stdout to ensure visibility
-            if getattr(sys, "__stdout__", None) is not None:  # If original stdout is available
-                sys.__stdout__.write(msg + "\n")  # Write message to original stdout
-                sys.__stdout__.flush()  # Flush immediately
+            original_stdout = getattr(sys, "__stdout__", None)  # Get the original stdout stream
+            if original_stdout is not None and hasattr(original_stdout, "write"):  # Verify original stdout is available and has write method
+                try:  # Try to write the message directly to the original stdout
+                    original_stdout.write(msg + "\n")  # Write message to original stdout
+                    if hasattr(original_stdout, "flush"):  # If original stdout has a flush method, flush it to ensure the message is displayed immediately
+                        original_stdout.flush()  # Flush immediately if available
+                except Exception:  # If writing to original stdout fails for any reason, fallback to print
+                    print(msg)  # Fallback to print if writing to original stdout fails
             else:  # Fallback to regular print if original stdout not available
                 print(msg)  # Print to current stdout
-        except Exception:  # If direct write fails for any reason
+        except Exception:  # If direct attribute access fails for any reason
             print(msg)  # Fallback to print
         return False  # Return False to indicate validation failure due to bad regex
 
