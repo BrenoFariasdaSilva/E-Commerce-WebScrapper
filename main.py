@@ -88,7 +88,7 @@ class BackgroundColors:  # Colors for the terminal
 
 
 # Execution Constants:
-VERBOSE = True  # Set to True to output verbose messages
+VERBOSE = False  # Set to True to output verbose messages
 
 TEST_URLs = [""]  # Test URLs for scraping
 
