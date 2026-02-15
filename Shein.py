@@ -1103,7 +1103,7 @@ class Shein:
         if not product_data:  # Verify if product data dictionary is empty or None
             print(f"{BackgroundColors.RED}No product data to display.{Style.RESET_ALL}")  # Alert user that no data is available
             return  # Exit method early when no data to print
-        print(f"{BackgroundColors.GREEN}Product information extracted successfully:{BackgroundColors.GREEN}\n  {BackgroundColors.CYAN}Name:{BackgroundColors.GREEN} {product_data.get('name', 'N/A')}\n  {BackgroundColors.CYAN}Old Price:{BackgroundColors.GREEN} R${product_data.get('old_price_integer', 'N/A')},{product_data.get('old_price_decimal', 'N/A') if product_data.get('old_price_integer', 'N/A') != 'N/A' else 'N/A'}\n  {BackgroundColors.CYAN}Current Price:{BackgroundColors.GREEN} R${product_data.get('current_price_integer', 'N/A')},{product_data.get('current_price_decimal', 'N/A')}\n  {BackgroundColors.CYAN}Discount:{BackgroundColors.GREEN} {product_data.get('discount_percentage', 'N/A')}\n  {BackgroundColors.CYAN}Description:{BackgroundColors.GREEN} {product_data.get('description', 'N/A')[:100]}...{Style.RESET_ALL}")
+        verbose_output(f"{BackgroundColors.GREEN}Product information extracted successfully:{BackgroundColors.GREEN}\n  {BackgroundColors.CYAN}Name:{BackgroundColors.GREEN} {product_data.get('name', 'N/A')}\n  {BackgroundColors.CYAN}Old Price:{BackgroundColors.GREEN} R${product_data.get('old_price_integer', 'N/A')},{product_data.get('old_price_decimal', 'N/A') if product_data.get('old_price_integer', 'N/A') != 'N/A' else 'N/A'}\n  {BackgroundColors.CYAN}Current Price:{BackgroundColors.GREEN} R${product_data.get('current_price_integer', 'N/A')},{product_data.get('current_price_decimal', 'N/A')}\n  {BackgroundColors.CYAN}Discount:{BackgroundColors.GREEN} {product_data.get('discount_percentage', 'N/A')}\n  {BackgroundColors.CYAN}Description:{BackgroundColors.GREEN} {product_data.get('description', 'N/A')[:100]}...{Style.RESET_ALL}")
 
 
     def scrape_product_info(self, html_content=""):
@@ -1563,16 +1563,16 @@ class Shein:
         :return: Dictionary containing all scraped data and downloaded file paths
         """
 
-        print(f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Starting {BackgroundColors.CYAN}Shein{BackgroundColors.GREEN} Scraping process...{Style.RESET_ALL}")
+        verbose_output(f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Starting {BackgroundColors.CYAN}Shein{BackgroundColors.GREEN} Scraping process...{Style.RESET_ALL}")
         try:  # Attempt scraping process with error handling
             if self.local_html_path:  # If local HTML file path is provided
-                print(f"{BackgroundColors.GREEN}Using offline mode with local HTML file{Style.RESET_ALL}")
+                verbose_output(f"{BackgroundColors.GREEN}Using offline mode with local HTML file{Style.RESET_ALL}")
                 html_content = self.read_local_html()  # Read HTML content from local file
                 if not html_content:  # Verify if HTML reading failed
                     return None  # Return None if HTML is unavailable
                 self.html_content = html_content  # Store HTML content for later use
             else:  # Online scraping mode
-                print(f"{BackgroundColors.GREEN}Using online mode with browser automation{Style.RESET_ALL}")
+                verbose_output(f"{BackgroundColors.GREEN}Using online mode with browser automation{Style.RESET_ALL}")
                 self.launch_browser()  # Initialize and launch browser instance
                 if not self.load_page():  # Attempt to load product page
                     return None  # Return None if page loading failed
@@ -1587,7 +1587,7 @@ class Shein:
                 return None  # Return None if extraction failed
             downloaded_files = self.download_media()  # Download product media and create snapshot
             product_info["downloaded_files"] = downloaded_files  # Add downloaded files to product info dictionary
-            print(f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Shein scraping completed successfully!{Style.RESET_ALL}")
+            verbose_output(f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Shein scraping completed successfully!{Style.RESET_ALL}")
             return product_info  # Return complete product information with downloaded files
         except Exception as e:  # Catch any exceptions during scraping process
             print(f"{BackgroundColors.RED}Scraping failed: {e}{Style.RESET_ALL}")  # Alert user about scraping failure
