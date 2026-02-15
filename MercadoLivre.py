@@ -1141,10 +1141,11 @@ class MercadoLivre:
         try:  # Attempt to build at least a basic asset mapping
             soup = BeautifulSoup(html_content, "html.parser")  # Parse HTML to locate asset tags
             for img in soup.find_all("img"):  # Iterate over all img tags
-                src = img.get("src") or img.get("data-src")  # Prefer src but fallback to data-src
+                src = self.safe_get_attr(img, "src", "data-src")  # Safely prefer src then data-src
                 if not src:  # Skip when no source found
                     continue  # Continue to next tag
-                filename = os.path.basename(src.split("?")[0])  # Derive filename from URL without query
+                src_clean = src.split("?", 1)[0]  # Strip query string from URL
+                filename = os.path.basename(src_clean)  # Derive filename from cleaned URL
                 rel_path = f"assets/{filename}"  # Local relative path inside product folder
                 asset_map[src] = rel_path  # Map original URL to relative path
         except Exception as e:  # If any error occurs during asset collection
