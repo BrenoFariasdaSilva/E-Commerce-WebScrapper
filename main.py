@@ -609,10 +609,14 @@ def verify_affiliate_url_format(url):
     Verify if a URL uses the supported short affiliate redirect format.
 
     :param url: The product URL to verify
-    :return: None
+    :return: True if URL is acceptable or matches affiliate pattern, False if it fails regex validation
     """
 
     platform_id = detect_platform(url)  # Detect platform from the URL
+
+    if platform_id is None:  # If platform detection failed, nothing to validate
+        return True  # Consider as acceptable (no affiliate check required)
+    
     platform_modules = {  # Mapping of platform ids to scraper modules
         "mercadolivre": MercadoLivre,  # MercadoLivre module
         "shein": Shein,  # Shein module
@@ -621,17 +625,36 @@ def verify_affiliate_url_format(url):
 
     module = platform_modules.get(platform_id)  # Retrieve module for detected platform
     if module is None:  # If platform unsupported, nothing to validate
-        return  # Exit early
+        return True  # Consider as acceptable
 
     pattern = getattr(module, "AFFILIATE_URL_PATTERN", None)  # Get affiliate regex pattern
     if not pattern:  # If pattern not defined, nothing to validate
-        return  # Exit early
+        return True  # Consider as acceptable
 
     try:  # Attempt regex match
-        if not re.search(pattern, url, flags=re.IGNORECASE):  # If URL does not match affiliate pattern
-            print(f"{BackgroundColors.YELLOW}Warning: URL is not in the expected affiliate format for {platform_id}: {BackgroundColors.CYAN}{url}{Style.RESET_ALL}")  # Print warning
+        matched = re.search(pattern, url, flags=re.IGNORECASE) is not None  # Boolean whether pattern matched
+        if not matched:  # If URL does not match affiliate pattern
+            msg = f"{BackgroundColors.YELLOW}Warning: URL is not in the expected affiliate format for {platform_id}: {BackgroundColors.CYAN}{url}{Style.RESET_ALL}"  # Warning message to display
+            try:  # Try writing directly to the original stdout to ensure visibility
+                if getattr(sys, "__stdout__", None) is not None:  # If original stdout is available
+                    sys.__stdout__.write(msg + "\n")  # Write message to original stdout
+                    sys.__stdout__.flush()  # Flush immediately
+                else:  # Fallback to regular print if original stdout not available
+                    print(msg)  # Print to current stdout
+            except Exception:  # If direct write fails for any reason
+                print(msg)  # Fallback to print
+        return matched  # Return boolean indicating match
     except re.error:  # If the pattern is invalid
-        print(f"{BackgroundColors.YELLOW}Warning: invalid affiliate regex for {platform_id}.{Style.RESET_ALL}")  # Print invalid-regex warning
+        msg = f"{BackgroundColors.YELLOW}Warning: invalid affiliate regex for {platform_id}.{Style.RESET_ALL}"  # Invalid-regex warning message
+        try:  # Try writing directly to the original stdout to ensure visibility
+            if getattr(sys, "__stdout__", None) is not None:  # If original stdout is available
+                sys.__stdout__.write(msg + "\n")  # Write message to original stdout
+                sys.__stdout__.flush()  # Flush immediately
+            else:  # Fallback to regular print if original stdout not available
+                print(msg)  # Print to current stdout
+        except Exception:  # If direct write fails for any reason
+            print(msg)  # Fallback to print
+        return False  # Return False to indicate validation failure due to bad regex
 
 
 def resolve_local_html_path(local_html_path):
