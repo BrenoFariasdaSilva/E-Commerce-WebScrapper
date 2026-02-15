@@ -337,6 +337,27 @@ def install_ffmpeg_windows():
     )
 
 
+def install_ffmpeg_linux():
+    """
+    Installs FFmpeg on Linux using the package manager.
+
+    :return: None
+    """
+
+    verbose_output(
+        f"{BackgroundColors.GREEN}Installing FFmpeg on Linux...{Style.RESET_ALL}"
+    )  # Output the verbose message
+
+    try:  # Try installing FFmpeg
+        subprocess.run(["sudo", "apt", "update"], check=True)  # Update package list
+        subprocess.run(["sudo", "apt", "install", "-y", "ffmpeg"], check=True)  # Install FFmpeg
+        verbose_output(
+            f"{BackgroundColors.GREEN}FFmpeg installed successfully.{Style.RESET_ALL}"
+        )  # Output the verbose message
+    except subprocess.CalledProcessError:  # If an error occurs
+        print("Failed to install FFmpeg. Please install it manually using your package manager.")  # Inform the user
+
+
 def create_directory(full_directory_name, relative_directory_name):
     """
     Creates a directory.
