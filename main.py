@@ -852,6 +852,9 @@ def scrape_product(url, timestamped_output_dir, local_html_path=None):
         if not verify_filepath_exists(description_file):  # If description file not found
             print(f"{BackgroundColors.RED}Description file not found: {description_file}{Style.RESET_ALL}")
             return None, None, None, None, None, None  # Return None values
+
+        input_source = html_path or local_html_path  # Determine the best candidate input source
+        copy_original_input_to_output(input_source, product_directory, base_output_dir=timestamped_output_dir)  # Copy original input to output
         
         return product_data, description_file, product_directory, html_path, zip_path, extracted_dir
         
