@@ -404,11 +404,14 @@ class Shein:
         for tag, attrs in HTML_SELECTORS["product_name"]:  # Iterate through each selector combination from centralized dictionary
             name_element = soup.find(tag, attrs if attrs else None)  # Search for element matching current selector
             if name_element:  # Verify if matching element was found
-                raw_product_name = name_element.get_text(strip=True)  # Extract raw text from the found element
-                product_name = re.sub(r'[<>:"/\\|?*]', '_', raw_product_name.title())  # Create a safe filename by replacing invalid characters and applying title case for better formatting
-                if product_name and product_name != "":  # Validate that extracted name is not empty
-                    verbose_output(f"{BackgroundColors.GREEN}Product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}")  # Log successfully extracted (formatted) product name
-                    return product_name  # Return the title-cased product name immediately when found
+                    raw_product_name = name_element.get_text(separator=" ", strip=True)  # Extract raw text, preserve single spaces between parts
+                    raw_product_name = raw_product_name.replace("\u00A0", " ")  # Replace NBSP with normal space
+                    raw_product_name = re.sub(r"\s+", " ", raw_product_name).strip()  # Collapse multiple whitespace to single spaces
+                    product_name = re.sub(r'[<>:"/\\|?*]', "_", raw_product_name.title())  # Sanitize filename and apply title case for consistent formatting
+                    product_name = re.sub(r"\s+", " ", product_name).strip()  # Ensure no repeated spaces after title-casing
+                    if product_name and product_name != "":  # Validate that extracted name is not empty
+                        verbose_output(f"{BackgroundColors.GREEN}Product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}")  # Log successfully extracted (formatted) product name
+                        return product_name  # Return the sanitized, title-cased product name immediately when found
         verbose_output(f"{BackgroundColors.YELLOW}Product name not found, using default.{Style.RESET_ALL}")  # Warn that product name could not be extracted
         return "Unknown Product"  # Return default placeholder when name extraction fails
 
