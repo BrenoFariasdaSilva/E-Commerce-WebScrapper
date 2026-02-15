@@ -434,7 +434,7 @@ class MercadoLivre:
             print(f"{BackgroundColors.RED}No product data to display.{Style.RESET_ALL}")  # Output the error message
             return  # Return early
         
-        print(
+        verbose_output(
             f"{BackgroundColors.GREEN}Product information extracted successfully:{BackgroundColors.GREEN}\n"
             f"  {BackgroundColors.CYAN}Name:{BackgroundColors.GREEN} {product_data.get('name', 'N/A')}\n"
             f"  {BackgroundColors.CYAN}Old Price:{BackgroundColors.GREEN} R${product_data.get('old_price_integer', 'N/A')},{product_data.get('old_price_decimal', 'N/A') if product_data.get('old_price_integer', 'N/A') != 'N/A' else 'N/A'}\n"
@@ -1155,19 +1155,19 @@ class MercadoLivre:
         :return: Dictionary containing all scraped data and downloaded file paths
         """
 
-        print(
+        verbose_output(
             f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Starting {BackgroundColors.CYAN}Mercado Livre{BackgroundColors.GREEN} Scraping process...{Style.RESET_ALL}"
         )  # Output the start message
         
         if self.local_html_path:  # If local HTML file path is provided
-            print(f"{BackgroundColors.GREEN}Using offline mode with local HTML file{Style.RESET_ALL}")
+            verbose_output(f"{BackgroundColors.GREEN}Using offline mode with local HTML file{Style.RESET_ALL}")
             html_content = self.read_local_html()  # Read HTML content from local file
             if not html_content:  # Verify if HTML reading failed
                 return None  # Return None if HTML is unavailable
             self.html_content = html_content  # Store HTML content for later use
             self.product_url = self.url  # Use the provided URL as product URL in offline mode
         else:  # Online scraping mode
-            print(f"{BackgroundColors.GREEN}Using online mode with HTTP requests{Style.RESET_ALL}")
+            verbose_output(f"{BackgroundColors.GREEN}Using online mode with HTTP requests{Style.RESET_ALL}")
             self.get_product_url()  # Step 1: Get the actual product URL
         
         product_info = self.scrape_product_info(verbose=VERBOSE)  # Step 2: Scrape product information
@@ -1179,7 +1179,7 @@ class MercadoLivre:
         
         self.product_data["downloaded_media"] = downloaded_files  # Step 4: Store downloaded file paths
         
-        print(
+        verbose_output(
             f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Scraping process completed successfully!{Style.RESET_ALL}"
         )  # Output the completion message
         
