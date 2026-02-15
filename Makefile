@@ -64,16 +64,10 @@ dependencies: $(VENV)
 generate_requirements: $(VENV)
 	$(PIP) freeze > requirements.txt
 
-# Run Telegram Bot
-telegram_bot: dependencies
-	$(ENSURE_LOG_DIR)
-	$(CLEAR_CMD)
-	$(call RUN_AND_LOG, ./telegram_bot.py $(ARGS))
-
 # Clean artifacts
 clean:
 	rm -rf $(VENV) || rmdir /S /Q $(VENV) 2>nul
 	find . -type f -name '*.pyc' -delete || del /S /Q *.pyc 2>nul
 	find . -type d -name '__pycache__' -delete || rmdir /S /Q __pycache__ 2>nul
 
-.PHONY: all run clean dependencies generate_requirements telegram_bot
+.PHONY: all run clean dependencies generate_requirements
