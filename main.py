@@ -708,6 +708,59 @@ def resolve_local_html_path(local_html_path):
     return local_html_path  # Return original path even if not found
 
 
+def copy_original_input_to_output(input_source, product_directory, base_output_dir=OUTPUT_DIRECTORY):
+    """
+    Copies the original input file or directory used for scraping into the product output directory.
+
+    :param input_source: Path to the original input file, zip, or directory used for scraping
+    :param product_directory: Relative product directory name under the base output directory
+    :param base_output_dir: Base output directory where product directories are created
+    :return: True if a copy was attempted/succeeded, False otherwise
+    """
+
+    if not input_source:  # If no input source provided
+        return False  # Nothing to copy
+
+    product_dir_full = os.path.join(base_output_dir, product_directory)  # Full path to the product output directory
+
+    try:  # Try to copy the input source into the product output folder
+        if not os.path.exists(product_dir_full):  # If the product output directory does not exist
+            os.makedirs(product_dir_full, exist_ok=True)  # Create the product output directory
+
+        if os.path.isfile(input_source):  # If the input source points to a file
+            shutil.copy2(input_source, product_dir_full)  # Copy the file preserving metadata
+            verbose_output(f"{BackgroundColors.GREEN}Copied input file {BackgroundColors.CYAN}{input_source}{BackgroundColors.GREEN} to {BackgroundColors.CYAN}{product_dir_full}{Style.RESET_ALL}")  # Verbose copy message
+            return True  # Indicate success
+
+        if os.path.isdir(input_source):  # If the input source points to a directory
+            dest_dir = os.path.join(product_dir_full, os.path.basename(input_source))  # Destination path inside the product folder
+            if os.path.exists(dest_dir):  # If the destination already exists
+                shutil.rmtree(dest_dir)  # Remove the existing destination to replace it
+            shutil.copytree(input_source, dest_dir)  # Copy the whole directory tree
+            verbose_output(f"{BackgroundColors.GREEN}Copied input directory {BackgroundColors.CYAN}{input_source}{BackgroundColors.GREEN} to {BackgroundColors.CYAN}{dest_dir}{Style.RESET_ALL}")  # Verbose copy message
+            return True  # Indicate success
+
+        candidate = os.path.join(INPUT_DIRECTORY, os.path.basename(input_source))  # Candidate path inside INPUT_DIRECTORY
+        if os.path.exists(candidate):  # If the candidate exists in Inputs
+            if os.path.isfile(candidate):  # If the candidate is a file
+                shutil.copy2(candidate, product_dir_full)  # Copy the candidate file
+                verbose_output(f"{BackgroundColors.GREEN}Copied candidate input file {BackgroundColors.CYAN}{candidate}{BackgroundColors.GREEN} to {BackgroundColors.CYAN}{product_dir_full}{Style.RESET_ALL}")  # Verbose copy message
+                return True  # Indicate success
+            else:  # Candidate is a directory
+                dest_dir = os.path.join(product_dir_full, os.path.basename(candidate))  # Destination path inside the product folder
+                if os.path.exists(dest_dir):  # If destination already exists
+                    shutil.rmtree(dest_dir)  # Remove existing destination
+                shutil.copytree(candidate, dest_dir)  # Copy the directory tree
+                verbose_output(f"{BackgroundColors.GREEN}Copied candidate input directory {BackgroundColors.CYAN}{candidate}{BackgroundColors.GREEN} to {BackgroundColors.CYAN}{dest_dir}{Style.RESET_ALL}")  # Verbose copy message
+                return True  # Indicate success
+
+    except Exception as e:  # If an error occurs during copy
+        print(f"{BackgroundColors.RED}Error copying input {BackgroundColors.CYAN}{input_source}{BackgroundColors.RED} to {BackgroundColors.CYAN}{product_dir_full}{BackgroundColors.RED}: {e}{Style.RESET_ALL}")  # Print error message
+        return False  # Indicate failure
+
+    return False  # Default: nothing copied
+
+
 def scrape_product(url, timestamped_output_dir, local_html_path=None):
     """
     Scrapes product information from a URL by detecting the platform and using the appropriate scraper.
