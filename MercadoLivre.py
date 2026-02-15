@@ -284,14 +284,19 @@ class MercadoLivre:
         """
         
         name_element = soup.find(**HTML_SELECTORS["product_name"])  # Find the product name element using centralized selector
-        product_name = name_element.get_text(strip=True).title() if name_element else "Unknown Product"  # Extract and capitalize the product name
-        product_name.title()  # Convert to title case for better formatting
+        if name_element:  # Verify if matching element was found
+            raw_product_name = name_element.get_text(strip=True)  # Extract raw text from the found element
+            product_name = re.sub(r'[<>:"/\\|?*]', '_', raw_product_name.title())  # Create a safe filename by replacing invalid characters and applying title case for better formatting
+            
+            verbose_output(
+                f"{BackgroundColors.GREEN}Product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}"
+            )  # Output the verbose message
+            return product_name  # Return the title-cased product name immediately when found
         
-        verbose_output(
-            f"{BackgroundColors.GREEN}Product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}"
-        )  # Output the verbose message
-        
-        return product_name  # Return the product name
+        verbose_output(  # Warn that product name could not be extracted
+            f"{BackgroundColors.YELLOW}Product name not found, using default.{Style.RESET_ALL}"
+        )  # End of verbose output call
+        return "Unknown Product"  # Return default placeholder when name extraction fails
 
 
     def detect_international(self, soup):
@@ -1100,17 +1105,14 @@ class MercadoLivre:
             return downloaded_files  # Return empty list
         
         try:  # Try to fetch and parse the product page
-            product_name_raw = self.product_data.get("name", "").strip()  # Get the raw product name
-            if isinstance(product_name_raw, str) and product_name_raw.lower() == "unknown product":  # If product name is "Unknown Product", skip media download and file creation
+            product_name = self.product_data.get("name", "").strip()  # Get the product name
+            if isinstance(product_name, str) and product_name.lower() == "unknown product":  # If product name is "Unknown Product", skip media download and file creation
                 verbose_output(
                     f"{BackgroundColors.YELLOW}Product name is 'Unknown Product' — skipping media download and file creation.{Style.RESET_ALL}"
                 )
                 return downloaded_files  # Return empty list
 
-            raw_name_for_safe = self.product_data.get("name", "Unknown_Product")
-            product_name_safe = re.sub(r'[<>:"/\\|?*]', '_', raw_name_for_safe.title())  # Create a safe filename
-            
-            output_dir = self.create_output_directory(product_name_safe)  # Create the output directory
+            output_dir = self.create_output_directory(product_name)  # Create the output directory
             
             soup = self.fetch_product_page(self.session, self.product_url)  # Fetch and parse the product page
             
@@ -1132,7 +1134,7 @@ class MercadoLivre:
                 f"{BackgroundColors.GREEN}Creating product description file...{Style.RESET_ALL}"
             )  # Output message
             
-            txt_file = self.create_product_description_file(self.product_data, output_dir, product_name_safe, self.url)  # Create description file
+            txt_file = self.create_product_description_file(self.product_data, output_dir, product_name, self.url)  # Create description file
             if txt_file:  # If file was created successfully
                 downloaded_files.append(txt_file)  # Add to downloaded files
             
