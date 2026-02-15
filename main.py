@@ -738,6 +738,42 @@ def copy_original_input_to_output(input_source, product_directory, base_output_d
             os.makedirs(product_dir_full, exist_ok=True)  # Create the product output directory
 
         if os.path.isfile(input_source):  # If the input source points to a file
+            # If the file is an HTML file, prefer copying the originating zip or extracted folder
+            if str(input_source).lower().endswith('.html'):  # If the source is an HTML file
+                html_dir = os.path.dirname(input_source)  # Directory containing the HTML file
+                html_dir_name = os.path.basename(html_dir)  # Basename of the directory containing HTML
+                copied_any = False  # Track whether we copied any preferred artifact
+
+                # Candidate zip locations to check for the original archive
+                candidate_zips = [
+                    f"{html_dir}.zip",  # Same path with .zip appended
+                    os.path.join(os.path.dirname(html_dir), f"{html_dir_name}.zip"),  # Parent dir + basename.zip
+                    os.path.join(INPUT_DIRECTORY, f"{html_dir_name}.zip"),  # Inputs/{basename}.zip
+                ]  # End candidate zips
+
+                # Copy any existing zip candidates into the product folder
+                for cz in candidate_zips:  # Iterate candidate zip paths
+                    if os.path.exists(cz) and os.path.isfile(cz):  # If candidate zip exists and is a file
+                        shutil.copy2(cz, product_dir_full)  # Copy the zip preserving metadata
+                        verbose_output(f"{BackgroundColors.GREEN}Copied original zip {BackgroundColors.CYAN}{cz}{BackgroundColors.GREEN} to {BackgroundColors.CYAN}{product_dir_full}{Style.RESET_ALL}")  # Verbose copy message
+                        copied_any = True  # Mark that we copied something
+
+                # If the html is inside a directory, copy the entire directory as the extracted folder
+                if os.path.isdir(html_dir):  # If the HTML's parent is a directory
+                    dest_dir = os.path.join(product_dir_full, os.path.basename(html_dir))  # Destination inside product folder
+                    if os.path.exists(dest_dir):  # If destination already exists
+                        shutil.rmtree(dest_dir)  # Remove it to replace
+                    try:  # Attempt to copy the extracted directory
+                        shutil.copytree(html_dir, dest_dir)  # Copy directory tree
+                        verbose_output(f"{BackgroundColors.GREEN}Copied extracted directory {BackgroundColors.CYAN}{html_dir}{BackgroundColors.GREEN} to {BackgroundColors.CYAN}{dest_dir}{Style.RESET_ALL}")  # Verbose copy message
+                        copied_any = True  # Mark that we copied something
+                    except Exception:  # If copying directory fails, ignore and fallback
+                        pass  # Continue to fallback behavior
+
+                if copied_any:  # If we copied zip or extracted dir, do not copy the HTML itself
+                    return True  # Indicate success
+
+            # Fallback: copy the file itself when no zip/extracted folder found or not an HTML file
             shutil.copy2(input_source, product_dir_full)  # Copy the file preserving metadata
             verbose_output(f"{BackgroundColors.GREEN}Copied input file {BackgroundColors.CYAN}{input_source}{BackgroundColors.GREEN} to {BackgroundColors.CYAN}{product_dir_full}{Style.RESET_ALL}")  # Verbose copy message
             return True  # Indicate success
