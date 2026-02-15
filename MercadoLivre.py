@@ -663,6 +663,42 @@ class MercadoLivre:
         
         return soup  # Return the parsed soup
 
+    
+    def safe_get_attr(self, tag, *attrs):
+        """
+        Safely retrieves the value of the first existing attribute from a BeautifulSoup Tag.
+        
+        :param tag: The BeautifulSoup Tag object to retrieve attributes from
+        :param attrs: A list of attribute names to check in order of priority
+        :return: The value of the first found attribute as a string, or None if none found
+        """
+        
+        if tag is None:  # If no tag provided
+            return None  # Nothing to return
+        
+        attrs_dict = getattr(tag, "attrs", None)  # Get attributes mapping if present
+        if not isinstance(attrs_dict, dict):  # If attrs not a dict
+            getter = getattr(tag, "get", None)  # Retrieve .get if exists
+            if callable(getter):  # Only call if it's a function
+                for a in attrs:  # Iterate candidate attribute names
+                    v = getter(a, None)  # Attempt to get attribute via tag.get
+                    if v:  # If a truthy value found
+                        return v if isinstance(v, str) else str(v)  # Return coerced string
+            return None  # No attrs found
+        for a in attrs:  # Iterate attribute names in order
+            v = attrs_dict.get(a)  # Get raw attribute value from attrs dict
+            if v is None:  # Skip missing attributes
+                continue  # Continue to next attribute name
+            if isinstance(v, str):  # If already a string
+                s = v  # Use as-is
+            elif isinstance(v, (list, tuple)):  # If list-like attribute
+                s = " ".join(map(str, v))  # Join into space-separated string
+            else:  # Other types (e.g., PageElement wrappers)
+                s = str(v)  # Coerce to string
+            s = s.strip()  # Trim whitespace
+            if s:  # If non-empty after trimming
+                return s  # Return the string value
+        return None  # No matching attribute found
 
     def find_image_urls(self, soup):
         """
@@ -694,15 +730,14 @@ class MercadoLivre:
                     
                     img = figure.find("img")
                     
-                    if isinstance(img, Tag):
-                        img_url = img.get("data-zoom") or img.get("src")
-                        
-                        if img_url and isinstance(img_url, str):
-                            if not img_url.startswith("data:") and not img_url.startswith("blob:"):
-                                base_url = img_url.split("?")[0]
-                                if base_url not in seen_urls:
-                                    seen_urls.add(base_url)
-                                    image_urls.append(img_url)  # Keep full URL with params
+                    if isinstance(img, Tag):  # If an img tag is found
+                        img_url = self.safe_get_attr(img, "data-zoom", "src")  # Safely get zoom or src attribute
+                        if img_url:  # If we obtained a URL string
+                            if not img_url.startswith("data:") and not img_url.startswith("blob:"):  # Skip data/blob URLs
+                                base_url = img_url.split("?", 1)[0]  # Derive base URL without query
+                                if base_url not in seen_urls:  # If not already seen
+                                    seen_urls.add(base_url)  # Mark as seen
+                                    image_urls.append(img_url)  # Append full URL including params
         
         verbose_output(
             f"{BackgroundColors.GREEN}Found {BackgroundColors.CYAN}{len(image_urls)}{BackgroundColors.GREEN} unique images in gallery column.{Style.RESET_ALL}"
@@ -769,7 +804,7 @@ class MercadoLivre:
                         thumbnail_url = None
                         thumbnail_img = clip_wrapper.find("img", class_="clip-wrapper__thumbnail")
                         if thumbnail_img and isinstance(thumbnail_img, Tag):
-                            thumbnail_url = thumbnail_img.get("src")
+                            thumbnail_url = self.safe_get_attr(thumbnail_img, "src")  # Safely extract thumbnail src
                             verbose_output(
                                 f"{BackgroundColors.YELLOW}Found video thumbnail in HTML (video URL requires JSON): {thumbnail_url}{Style.RESET_ALL}"
                             )
