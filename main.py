@@ -546,7 +546,7 @@ def get_next_run_index(base_output_dir, today_str):
         return 1  # Return 1 as first run index if directory doesn't exist yet
     
     max_index = 0  # Initialize maximum index counter to zero
-    pattern = re.compile(r'^(\d+)\. (\d{4}-\d{2}-\d{2}) - \d{2}:\d{2}:\d{2}$')  # Regex pattern to match directory format: "index. YYYY-MM-DD - HH:MM:SS"
+    pattern = re.compile(r'^(\d+)\. \d{4}-\d{2}-\d{2} - \d{2}:\d{2}:\d{2}$')  # Regex pattern to match directory format: "index. YYYY-MM-DD - HH:MM:SS"
     
     for item in os.listdir(base_output_dir):  # Iterate through all items in base output directory
         item_path = os.path.join(base_output_dir, item)  # Construct full path to item
@@ -554,11 +554,9 @@ def get_next_run_index(base_output_dir, today_str):
             match = pattern.match(item)  # Try to match directory name against pattern
             if match:  # If directory name matches the expected format
                 index = int(match.group(1))  # Extract run index from first capture group
-                date_str = match.group(2)  # Extract date string from second capture group
-                if date_str == today_str:  # Verify if directory is from today
-                    max_index = max(max_index, index)  # Update max_index if current index is higher
-    
-    return max_index + 1  # Return next incremental index (max found + 1)
+                max_index = max(max_index, index)  # Update max_index if current index is higher
+
+    return max_index + 1  # Return next incremental index across all runs (max found + 1)
 
 
 def create_timestamped_output_directory(base_output_dir):
