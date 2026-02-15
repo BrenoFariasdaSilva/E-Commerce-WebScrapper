@@ -1087,6 +1087,34 @@ class MercadoLivre:
             return None  # Return None on failure
 
 
+    def collect_assets(self, html_content="", output_dir=""):
+        """
+        Downloads or maps page assets and returns a mapping of original URLs to local paths.
+
+        :param html_content: Raw HTML content as a string
+        :param output_dir: Directory where assets and snapshot will be stored
+        :return: Dictionary mapping original asset URLs to local relative paths
+        """
+
+        asset_map = {}  # Initialize empty mapping for assets
+        if not html_content:  # If no HTML content provided
+            return asset_map  # Nothing to collect
+
+        try:  # Attempt to build at least a basic asset mapping
+            soup = BeautifulSoup(html_content, "html.parser")  # Parse HTML to locate asset tags
+            for img in soup.find_all("img"):  # Iterate over all img tags
+                src = img.get("src") or img.get("data-src")  # Prefer src but fallback to data-src
+                if not src:  # Skip when no source found
+                    continue  # Continue to next tag
+                filename = os.path.basename(src.split("?")[0])  # Derive filename from URL without query
+                rel_path = f"assets/{filename}"  # Local relative path inside product folder
+                asset_map[src] = rel_path  # Map original URL to relative path
+        except Exception as e:  # If any error occurs during asset collection
+            print(f"{BackgroundColors.YELLOW}Warning collecting assets: {e}{Style.RESET_ALL}")  # Warn but continue
+
+        return asset_map  # Return whatever mapping we could build
+
+
     def download_media(self):
         """
         Downloads product images from the gallery and creates a product description file.
