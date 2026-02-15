@@ -1217,9 +1217,6 @@ def main():
                 )
                 continue  # Move to next URL
 
-            if local_html_path:  # If a local HTML path was provided
-                delete_local_html_file(local_html_path)  # Delete the local HTML file after successful scraping and validation
-
             verbose_output(f"{BackgroundColors.CYAN}Step 2{BackgroundColors.GREEN}: Formatting with Gemini AI{Style.RESET_ALL}")  # Step 2: Format the product description with Gemini AI
             
             success = generate_marketing_text(product_description, description_file, product_data)  # Generate marketing text with product data
