@@ -45,7 +45,7 @@ run: dependencies
 	$(call RUN_AND_LOG, ./main.py)
 
 # Update repository and run
-run_updated:
+update_and_run: dependencies
 	@echo "Updating repository: reset to HEAD and pulling latest changes..."
 	@git reset --hard HEAD
 	@git pull --ff-only || git pull
@@ -71,4 +71,4 @@ clean:
 	find . -type f -name '*.pyc' -delete || del /S /Q *.pyc 2>nul
 	find . -type d -name '__pycache__' -delete || rmdir /S /Q __pycache__ 2>nul
 
-.PHONY: all run run_updated clean dependencies generate_requirements
+.PHONY: all run update_and_run clean dependencies generate_requirements
