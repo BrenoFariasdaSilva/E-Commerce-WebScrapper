@@ -548,7 +548,7 @@ def resolve_local_html_path(local_html_path):
         return local_html_path  # Return as-is
     
     if verify_filepath_exists(local_html_path):  # If path exists as provided
-        print(f"{BackgroundColors.GREEN}Resolved local HTML path: {BackgroundColors.CYAN}{local_html_path}{Style.RESET_ALL}")  # Confirm resolution
+        verbose_output(f"{BackgroundColors.GREEN}Resolved local HTML path: {BackgroundColors.CYAN}{local_html_path}{Style.RESET_ALL}")  # Confirm resolution
         return local_html_path  # Return original path
     
     prefixes = ["", "./Inputs/"]  # Empty prefix (already tried) and Inputs directory prefix
@@ -564,7 +564,7 @@ def resolve_local_html_path(local_html_path):
                 verbose_output(  # Output resolution message
                     f"{BackgroundColors.GREEN}Resolved local HTML path: {BackgroundColors.CYAN}{local_html_path}{BackgroundColors.GREEN} -> {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}"
                 )  # End of verbose output call
-                print(f"{BackgroundColors.GREEN}Resolved path variation: {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}")  # Inform user about resolution
+                verbose_output(f"{BackgroundColors.GREEN}Resolved path variation: {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}")  # Inform user about resolution
                 return test_path  # Return resolved path
     
     if local_html_path.lower().endswith('.html'):  # Check if path ends with .html extension
@@ -588,11 +588,11 @@ def resolve_local_html_path(local_html_path):
                 if verify_filepath_exists(test_path):  # If base path variation exists
                     if os.path.isdir(test_path):  # Check if it's a directory
                         resolved_html_path = os.path.join(test_path, html_filename)  # Reconstruct full HTML file path
-                        print(f"{BackgroundColors.GREEN}Resolved base directory: {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}")  # Inform about directory resolution
-                        print(f"{BackgroundColors.GREEN}Using HTML file: {BackgroundColors.CYAN}{resolved_html_path}{Style.RESET_ALL}")  # Inform about HTML file path
+                        verbose_output(f"{BackgroundColors.GREEN}Resolved base directory: {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}")  # Inform about directory resolution
+                        verbose_output(f"{BackgroundColors.GREEN}Using HTML file: {BackgroundColors.CYAN}{resolved_html_path}{Style.RESET_ALL}")  # Inform about HTML file path
                         return resolved_html_path  # Return reconstructed HTML path
                     else:  # It's a zip file
-                        print(f"{BackgroundColors.GREEN}Resolved base path to zip file: {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}")  # Inform about zip resolution
+                        verbose_output(f"{BackgroundColors.GREEN}Resolved base path to zip file: {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}")  # Inform about zip resolution
                         return test_path  # Return zip file path
     
     print(f"{BackgroundColors.YELLOW}Warning: Could not resolve local HTML path: {BackgroundColors.CYAN}{local_html_path}{BackgroundColors.YELLOW}. File may not exist.{Style.RESET_ALL}")  # Warn user
@@ -1036,9 +1036,9 @@ def main():
         
         if local_html_path:  # If a local HTML file path is provided
             local_html_path = resolve_local_html_path(local_html_path)  # Resolve path with fallback variations
-            print(f"{BackgroundColors.GREEN}Using local HTML file: {BackgroundColors.CYAN}{local_html_path}{Style.RESET_ALL}")  # Inform user about offline mode
+            verbose_output(f"{BackgroundColors.GREEN}Using local HTML file: {BackgroundColors.CYAN}{local_html_path}{Style.RESET_ALL}")  # Inform user about offline mode
         
-        print(f"{BackgroundColors.CYAN}Step 1{BackgroundColors.GREEN}: Scraping the product information{Style.RESET_ALL}")  # Step 1: Scrape the product information
+        verbose_output(f"{BackgroundColors.CYAN}Step 1{BackgroundColors.GREEN}: Scraping the product information{Style.RESET_ALL}")  # Step 1: Scrape the product information
         scrape_result = scrape_product(url, local_html_path)  # Scrape the product with optional local HTML path
         
         if not scrape_result or len(scrape_result) != 6:  # If scraping failed or returned invalid result
@@ -1087,7 +1087,7 @@ def main():
         if local_html_path:  # If a local HTML path was provided
             delete_local_html_file(local_html_path)  # Delete the local HTML file after successful scraping and validation
 
-        print(f"{BackgroundColors.CYAN}Step 2{BackgroundColors.GREEN}: Formatting with Gemini AI{Style.RESET_ALL}")  # Step 2: Format the product description with Gemini AI
+        verbose_output(f"{BackgroundColors.CYAN}Step 2{BackgroundColors.GREEN}: Formatting with Gemini AI{Style.RESET_ALL}")  # Step 2: Format the product description with Gemini AI
         
         success = generate_marketing_text(product_description, description_file, product_data)  # Generate marketing text with product data
         
