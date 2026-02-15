@@ -320,7 +320,7 @@ class MercadoLivre:
 
     def prefix_international_name(self):
         """
-        Prefix the scraped product name with "INTERNACIONAL - " when
+        Prefix the scraped product name with "International - " when
         `self.product_data['is_international']` is True.
 
         This method is separated from detection to keep responsibilities clear.
@@ -329,8 +329,8 @@ class MercadoLivre:
         try:  # Try to prefix the product name
             if self.product_data.get("is_international"):  # Check if the product is marked as international
                 name = self.product_data.get("name", "") or ""  # Get the current product name
-                if not name.startswith("INTERNACIONAL - "):  # Avoid double prefixing
-                    self.product_data["name"] = f"INTERNACIONAL - {name}"  # Prefix the name
+                if not name.startswith("International - "):  # Avoid double prefixing
+                    self.product_data["name"] = f"International - {name}"  # Prefix the name
                 print(
                     f"{BackgroundColors.GREEN}Marked as international product: {self.product_data['name']}{Style.RESET_ALL}"
                 )  # Output the verbose message
