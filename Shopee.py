@@ -829,14 +829,14 @@ class Shopee:
             print(f"{BackgroundColors.RED}No product data to display.{Style.RESET_ALL}")  # Alert user that no data is available
             return  # Exit method early when no data to print
         
-        print(  # Display formatted product information to user
+        verbose_output(  # Display formatted product information to user (verbose)
             f"{BackgroundColors.GREEN}Product information extracted successfully:{BackgroundColors.GREEN}\n"
             f"  {BackgroundColors.CYAN}Name:{BackgroundColors.GREEN} {product_data.get('name', 'N/A')}\n"
             f"  {BackgroundColors.CYAN}Old Price:{BackgroundColors.GREEN} R${product_data.get('old_price_integer', 'N/A')},{product_data.get('old_price_decimal', 'N/A') if product_data.get('old_price_integer', 'N/A') != 'N/A' else 'N/A'}\n"
             f"  {BackgroundColors.CYAN}Current Price:{BackgroundColors.GREEN} R${product_data.get('current_price_integer', 'N/A')},{product_data.get('current_price_decimal', 'N/A')}\n"
             f"  {BackgroundColors.CYAN}Discount:{BackgroundColors.GREEN} {product_data.get('discount_percentage', 'N/A')}\n"
             f"  {BackgroundColors.CYAN}Description:{BackgroundColors.GREEN} {product_data.get('description', 'N/A')[:100]}...{Style.RESET_ALL}"
-        )  # End of print statement
+        )  # End of verbose_output call
 
 
     def scrape_product_info(self, html_content: str) -> Optional[Dict[str, Any]]:
@@ -1463,15 +1463,15 @@ class Shopee:
         :return: Dictionary containing all scraped data and downloaded file paths
         """
 
-        print(  # Display scraping start message to user
+        verbose_output(  # Display scraping start message (verbose)
             f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Starting {BackgroundColors.CYAN}Shopee{BackgroundColors.GREEN} Scraping process...{Style.RESET_ALL}"
-        )  # End of print statement
+        )  # End of verbose_output call
         
         try:  # Attempt scraping process with error handling
             if self.local_html_path:  # If local HTML file path is provided
-                print(  # Display offline mode message
+                verbose_output(  # Display offline mode message (verbose)
                     f"{BackgroundColors.GREEN}Using offline mode with local HTML file{Style.RESET_ALL}"
-                )  # End of print statement
+                )  # End of verbose_output call
                 
                 html_content = self.read_local_html()  # Read HTML content from local file
                 if not html_content:  # Verify if HTML reading failed
@@ -1480,9 +1480,9 @@ class Shopee:
                 self.html_content = html_content  # Store HTML content for later use
                 
             else:  # Online scraping mode
-                print(  # Display online mode message
+                verbose_output(  # Display online mode message (verbose)
                     f"{BackgroundColors.GREEN}Using online mode with browser automation{Style.RESET_ALL}"
-                )  # End of print statement
+                )  # End of verbose_output call
                 
                 self.launch_browser()  # Initialize and launch browser instance
                 
@@ -1505,9 +1505,9 @@ class Shopee:
             downloaded_files = self.download_media()  # Download product media and create snapshot
             product_info["downloaded_files"] = downloaded_files  # Add downloaded files to product info dictionary
             
-            print(  # Display success message to user
+            verbose_output(  # Display success message to user
                 f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Shopee scraping completed successfully!{Style.RESET_ALL}"
-            )  # End of print statement
+            )  # End of verbose_output call
             
             return product_info  # Return complete product information with downloaded files
             
