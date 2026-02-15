@@ -92,6 +92,9 @@ class BackgroundColors:  # Colors for the terminal
 # Execution Constants:
 VERBOSE = False  # Set to True to output verbose messages
 
+# Affiliate URL detection pattern (short shopee redirect links)
+AFFILIATE_URL_PATTERN = r"https?://s\.shopee\.com(?:\.br)?/[A-Za-z0-9]+"
+
 # HTML Selectors Dictionary:
 HTML_SELECTORS = {
     "product_name": [  # List of CSS selectors for product name in priority order
