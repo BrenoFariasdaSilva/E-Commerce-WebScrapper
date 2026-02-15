@@ -803,7 +803,6 @@ def scrape_product(url, timestamped_output_dir, local_html_path=None):
     
     extracted_dir = None  # Directory where zip is extracted
     zip_path = None  # Path to the zip file for cleanup
-    html_path = local_html_path  # Default to local_html_path
     
     if local_html_path and local_html_path.lower().endswith('.zip'):  # If a local HTML path is provided and it is a zip file, extract it
         zip_path = local_html_path  # Store the zip path for later cleanup
@@ -818,12 +817,9 @@ def scrape_product(url, timestamped_output_dir, local_html_path=None):
             html_path = os.path.join(extracted_dir, 'index.html')  # Assume the main HTML file is named index.html in the extracted directory
             if not os.path.exists(html_path):  # Verify if the expected HTML file exists after extraction
                 print(f"{BackgroundColors.RED}Error: index.html not found in extracted directory {extracted_dir}{Style.RESET_ALL}")
-                shutil.rmtree(extracted_dir)  # Clean up the extracted directory if the expected HTML file is not found
                 return None, None, None, None, None, None  # Return None values if extraction failed or expected file not found
         except Exception as e:  # If an error occurs during extraction
             print(f"{BackgroundColors.RED}Error extracting zip {zip_path}: {e}{Style.RESET_ALL}")
-            if os.path.exists(extracted_dir):  # If the extracted directory was created before the error, attempt to clean it up
-                shutil.rmtree(extracted_dir)  # Clean up the extracted directory if extraction failed
             return None, None, None, None, None, None  # Return None values if extraction failed
     
     scraper_classes = {  # Mapping of platform identifiers to scraper classes
@@ -846,10 +842,6 @@ def scrape_product(url, timestamped_output_dir, local_html_path=None):
         product_data = scraper.scrape()  # Scrape the product
         
         if not product_data:  # If scraping failed
-            if extracted_dir and os.path.exists(extracted_dir):  # If extraction occurred and directory exists
-                shutil.rmtree(extracted_dir)  # Remove the extracted directory
-            if zip_path and os.path.exists(zip_path):  # If zip file exists
-                os.remove(zip_path)  # Remove the original zip file
             return None, None, None, None, None, None  # Return None values
         
         product_name = product_data.get("name", "Unknown Product")  # Get product name
@@ -859,26 +851,12 @@ def scrape_product(url, timestamped_output_dir, local_html_path=None):
         
         if not verify_filepath_exists(description_file):  # If description file not found
             print(f"{BackgroundColors.RED}Description file not found: {description_file}{Style.RESET_ALL}")
-            if extracted_dir and os.path.exists(extracted_dir):  # If extraction occurred and directory exists
-                shutil.rmtree(extracted_dir)  # Remove the extracted directory
-            if zip_path and os.path.exists(zip_path):  # If zip file exists
-                os.remove(zip_path)  # Remove the original zip file
             return None, None, None, None, None, None  # Return None values
         
         return product_data, description_file, product_directory, html_path, zip_path, extracted_dir
         
     except Exception as e:  # If an error occurs during scraping
         print(f"{BackgroundColors.RED}Error during scraping: {e}{Style.RESET_ALL}")  # Print error message
-        if extracted_dir and os.path.exists(extracted_dir):  # If extraction occurred and directory exists
-            try:  # Try to clean up
-                shutil.rmtree(extracted_dir)  # Remove the extracted directory
-            except Exception:  # If cleanup fails
-                pass  # Ignore cleanup errors
-        if zip_path and os.path.exists(zip_path):  # If zip file exists
-            try:  # Try to clean up
-                os.remove(zip_path)  # Remove the original zip file
-            except Exception:  # If cleanup fails
-                pass  # Ignore cleanup errors
         return None, None, None, None, None, None  # Return None values
 
 
