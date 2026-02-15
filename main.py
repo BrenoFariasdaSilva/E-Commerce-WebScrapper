@@ -571,7 +571,7 @@ def create_timestamped_output_directory(base_output_dir):
     
     now = datetime.datetime.now()  # Get current date and time
     today_str = now.strftime("%Y-%m-%d")  # Format date as YYYY-MM-DD string
-    time_str = now.strftime("%H:%M:%S")  # Format time as HH:MM:SS string
+    time_str = now.strftime("%Hh%Mm%Ss")  # Format time as HHh-MMm-SSd string
     
     run_index = get_next_run_index(base_output_dir, today_str)  # Get next run index for today
     
