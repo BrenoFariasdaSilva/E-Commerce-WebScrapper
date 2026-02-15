@@ -496,7 +496,7 @@ class Shopee:
     def detect_international(self, soup: BeautifulSoup) -> bool:
         """
         Detects if the product is international by checking for the international import declaration text.
-        Looks for "Produto internacional objeto de declaração de importação e sujeito a impostos estaduais e federais"
+        Looks for "Produto International objeto de declaração de importação e sujeito a impostos estaduais e federais"
         in elements with class="NzLZHV", or falls back to checking "País de Origem" (Country of Origin) field.
         
         :param soup: BeautifulSoup object containing the parsed HTML
@@ -516,7 +516,7 @@ class Shopee:
                 
                 element_text = element.get_text(strip=True)  # Extract and clean element text
                 
-                if "Produto internacional objeto de declaração de importação" in element_text:
+                if "Produto International objeto de declaração de importação" in element_text:
                     verbose_output(  # Log international detection
                         f"{BackgroundColors.YELLOW}Product is INTERNATIONAL (import declaration found){Style.RESET_ALL}"
                     )  # End of verbose output call
@@ -564,14 +564,14 @@ class Shopee:
 
     def prefix_international_name(self, product_name: str) -> str:
         """
-        Adds "INTERNACIONAL - " prefix to product name if not already present.
+        Adds "International - " prefix to product name if not already present.
         
         :param product_name: Original product name
-        :return: Product name with INTERNACIONAL prefix
+        :return: Product name with International prefix
         """
         
-        if not product_name.upper().startswith("INTERNACIONAL"):  # Check if prefix not already present
-            product_name = f"INTERNACIONAL - {product_name}"  # Add INTERNACIONAL prefix
+        if not product_name.upper().startswith("International"):  # Check if prefix not already present
+            product_name = f"International - {product_name}"  # Add International prefix
             verbose_output(  # Log name modification
                 f"{BackgroundColors.GREEN}Updated product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}"
             )  # End of verbose output call
@@ -862,7 +862,7 @@ class Shopee:
             
             is_international = self.detect_international(soup)  # Detect if product is international
             if is_international:  # If product is international
-                product_name = self.prefix_international_name(product_name)  # Add INTERNACIONAL prefix to name
+                product_name = self.prefix_international_name(product_name)  # Add International prefix to name
             
             current_price_int, current_price_dec = self.extract_current_price(soup)  # Extract current price integer and decimal parts
             old_price_int, old_price_dec = self.extract_old_price(soup)  # Extract old price integer and decimal parts
@@ -870,7 +870,7 @@ class Shopee:
             description = self.extract_product_description(soup)  # Extract product description text
             
             self.product_data = {  # Store all extracted data in dictionary
-                "name": product_name,  # Product name string (with INTERNACIONAL prefix if applicable)
+                "name": product_name,  # Product name string (with International prefix if applicable)
                 "is_international": is_international,  # Boolean indicating if product is international
                 "current_price_integer": current_price_int,  # Current price integer part
                 "current_price_decimal": current_price_dec,  # Current price decimal part
@@ -1421,10 +1421,10 @@ class Shopee:
             
             product_name = self.product_data.get("name", "Unknown Product")  # Get product name or use default
             is_international = self.detect_international(soup)
-            if is_international and not product_name.startswith("INTERNACIONAL"):
-                product_name = f"INTERNACIONAL - {product_name}"
+            if is_international and not product_name.startswith("International"):
+                product_name = f"International - {product_name}"
                 self.product_data["name"] = product_name  # Update product data with prefixed name
-                verbose_output(f"{BackgroundColors.YELLOW}Product name prefixed with 'INTERNACIONAL'.{Style.RESET_ALL}")
+                verbose_output(f"{BackgroundColors.YELLOW}Product name prefixed with 'International'.{Style.RESET_ALL}")
             
             output_dir = self.create_output_directory(product_name)  # Create output directory for product
             
