@@ -479,13 +479,16 @@ class Shopee:
         for tag, attrs in HTML_SELECTORS["product_name"]:  # Iterate through each selector combination from centralized dictionary
             name_element = soup.find(tag, attrs if attrs else None)  # type: ignore[arg-type]  # Search for element matching current selector
             if name_element:  # Verify if matching element was found
-                raw_product_name = name_element.get_text(strip=True)  # Extract raw text from the found element
-                product_name = re.sub(r'[<>:"/\\|?*]', '_', raw_product_name.title())  # Create a safe filename by replacing invalid characters and applying title case for better formatting
-                if product_name and product_name != "":  # Validate that extracted name is not empty
-                    verbose_output(  # Log successfully extracted product name
-                        f"{BackgroundColors.GREEN}Product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}"
-                    )  # End of verbose output call
-                    return product_name  # Return the product name immediately when found
+                    raw_product_name = name_element.get_text(separator=" ", strip=True)  # Extract raw text, preserve single spaces between parts
+                    raw_product_name = raw_product_name.replace("\u00A0", " ")  # Replace NBSP with normal space
+                    raw_product_name = re.sub(r"\s+", " ", raw_product_name).strip()  # Collapse multiple whitespace to single spaces
+                    product_name = re.sub(r'[<>:"/\\|?*]', "_", raw_product_name.title())  # Sanitize filename by replacing invalid characters and title-casing
+                    product_name = re.sub(r"\s+", " ", product_name).strip()  # Ensure no repeated spaces after title-casing
+                    if product_name and product_name != "":  # Validate that extracted name is not empty
+                        verbose_output(  # Log successfully extracted product name
+                            f"{BackgroundColors.GREEN}Product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}"
+                        )  # End of verbose output call
+                        return product_name  # Return the sanitized product name immediately when found
         
         verbose_output(  # Warn that product name could not be extracted
             f"{BackgroundColors.YELLOW}Product name not found, using default.{Style.RESET_ALL}"
@@ -572,11 +575,14 @@ class Shopee:
         
         if not product_name.upper().startswith("International"):  # Check if prefix not already present
             product_name = f"International - {product_name}"  # Add International prefix
+            # Normalize whitespace after prefix insertion to avoid accidental double spaces
+            product_name = product_name.replace("\u00A0", " ")  # Replace NBSP with normal space
+            product_name = re.sub(r"\s+", " ", product_name).strip()  # Collapse multiple whitespace to single spaces
             verbose_output(  # Log name modification
                 f"{BackgroundColors.GREEN}Updated product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}"
             )  # End of verbose output call
-        
-        return product_name  # Return modified product name
+
+        return product_name  # Return modified and normalized product name
 
 
     def extract_current_price(self, soup: BeautifulSoup) -> Tuple[str, str]:
