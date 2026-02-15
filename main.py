@@ -215,6 +215,29 @@ def verify_filepath_exists(filepath):
     return os.path.exists(filepath)  # Return True if the file or folder exists, False otherwise
 
 
+def ensure_input_file_exists():
+    """
+    Ensure the input file exists; create an empty one if missing.
+
+    :param: None
+    :return: True if the input file exists or was created successfully, False otherwise
+    """
+
+    if not verify_filepath_exists(INPUT_FILE):  # Verify if the input file exists
+        try:  # Attempt to create an empty input file
+            open(INPUT_FILE, "w", encoding="utf-8").close()  # Create an empty file at INPUT_FILE
+            verbose_output(  # Verbose message indicating creation
+                f"{BackgroundColors.GREEN}Created empty input file: {BackgroundColors.CYAN}{INPUT_FILE}{Style.RESET_ALL}"
+            )  # Output the verbose message
+            return True  # Return True when file was created successfully
+        except Exception as e:  # If creating the file fails
+            print(  # Print the failure message so user can see the error
+                f"{BackgroundColors.RED}Failed to create input file {BackgroundColors.CYAN}{INPUT_FILE}{BackgroundColors.RED}: {e}{Style.RESET_ALL}"
+            )  # Output reason for failure
+            return False  # Return False to indicate failure to ensure file
+    return True  # Return True when file already exists
+
+
 def verify_dot_env_file():
     """
     Verifies if the .env file exists in the current directory.
@@ -1049,6 +1072,9 @@ def main():
     create_directory(
         os.path.abspath(INPUT_DIRECTORY), INPUT_DIRECTORY.replace(".", "")
     )  # Create the input directory
+
+    if not ensure_input_file_exists():  # Ensure the input file exists, and if not, create it with instructions
+        return  # Exit if unable to ensure input file
     
     create_directory(
         os.path.abspath(OUTPUT_DIRECTORY), OUTPUT_DIRECTORY.replace(".", "")
