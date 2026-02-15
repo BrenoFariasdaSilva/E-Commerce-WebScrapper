@@ -477,7 +477,8 @@ class Shopee:
         for tag, attrs in HTML_SELECTORS["product_name"]:  # Iterate through each selector combination from centralized dictionary
             name_element = soup.find(tag, attrs if attrs else None)  # type: ignore[arg-type]  # Search for element matching current selector
             if name_element:  # Verify if matching element was found
-                product_name = name_element.get_text(strip=True).title()  # Extract, clean, and capitalize text content from element
+                raw_product_name = name_element.get_text(strip=True)  # Extract raw text from the found element
+                product_name = re.sub(r'[<>:"/\\|?*]', '_', raw_product_name.title())  # Create a safe filename by replacing invalid characters and applying title case for better formatting
                 if product_name and product_name != "":  # Validate that extracted name is not empty
                     verbose_output(  # Log successfully extracted product name
                         f"{BackgroundColors.GREEN}Product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}"
@@ -1423,10 +1424,7 @@ class Shopee:
                 self.product_data["name"] = product_name  # Update product data with prefixed name
                 verbose_output(f"{BackgroundColors.YELLOW}Product name prefixed with 'INTERNACIONAL'.{Style.RESET_ALL}")
             
-            raw_name_for_safe = product_name  # Raw product name before sanitization
-            product_name_safe = re.sub(r'[<>:"/\\|?*]', '_', raw_name_for_safe.title())  # Create a safe filename
-
-            output_dir = self.create_output_directory(product_name_safe)  # Create output directory for product
+            output_dir = self.create_output_directory(product_name)  # Create output directory for product
             
             image_files = self.download_product_images(soup, output_dir)  # Download all product images
             downloaded_files.extend(image_files)  # Add image files to downloaded list
@@ -1441,7 +1439,7 @@ class Shopee:
                 downloaded_files.append(snapshot_path)  # Add snapshot path to downloaded files list
             
             description_file = self.create_product_description_file(  # Create product description text file
-                self.product_data, output_dir, product_name_safe, self.product_url  # Pass all required parameters
+                self.product_data, output_dir, product_name, self.product_url  # Pass all required parameters
             )  # End of method call
             if description_file:  # Verify if description file was created successfully
                 downloaded_files.append(description_file)  # Add description file path to downloaded files list
