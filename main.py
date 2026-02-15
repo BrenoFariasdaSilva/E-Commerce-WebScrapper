@@ -1352,8 +1352,8 @@ def main():
                 
                 successful_scrapes += 1  # Increment successful scrapes counter
             
-            if index < total_urls:  # Add delay between requests to avoid rate limiting, but not after the last URL
-                time.sleep(DELAY_BETWEEN_REQUESTS)
+            if index < total_urls and not local_html_path:  # Add delay only for online requests (skip for local HTML inputs)
+                time.sleep(DELAY_BETWEEN_REQUESTS)  # Sleep to avoid rate limiting between online requests
     
     print(f"{BackgroundColors.GREEN}Successfully processed: {BackgroundColors.CYAN}{successful_scrapes}/{total_urls}{BackgroundColors.GREEN} URLs{Style.RESET_ALL}\n")  # Output the number of successful operations
 
