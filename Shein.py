@@ -792,7 +792,7 @@ class Shein:
         """
         Detects whether the product has only international shipping available.
         Checks for "Envio Nacional" (National Shipping) availability.
-        If "Envio Nacional" is sold out or not available, and "Internacional" is active/available, returns True.
+        If "Envio Nacional" is sold out or not available, and "International" is active/available, returns True.
 
         :param soup: BeautifulSoup object containing the parsed HTML
         :return: True if only international shipping is available, False otherwise
@@ -831,13 +831,13 @@ class Shein:
                             national_available = True  # Mark available
                             verbose_output(f"{BackgroundColors.GREEN}Found available 'Envio Nacional'.{Style.RESET_ALL}")  # Log available
 
-                    elif aria == "Internacional":  # Exact match international
+                    elif aria == "International":  # Exact match international
                         if is_soldout:  # If marked sold out
                             international_soldout = True  # Mark sold out
-                            verbose_output(f"{BackgroundColors.YELLOW}Found 'Internacional' marked sold out.{Style.RESET_ALL}")  # Log sold out
+                            verbose_output(f"{BackgroundColors.YELLOW}Found 'International' marked sold out.{Style.RESET_ALL}")  # Log sold out
                         else:  # Available
                             international_available = True  # Mark available
-                            verbose_output(f"{BackgroundColors.GREEN}Found available 'Internacional'.{Style.RESET_ALL}")  # Log available
+                            verbose_output(f"{BackgroundColors.GREEN}Found available 'International'.{Style.RESET_ALL}")  # Log available
 
                 if (not national_available) and international_available:  # National not available and international available
                     self.product_data["INTERNATIONAL_ONLY"] = True  # Set international-only
@@ -1520,10 +1520,10 @@ class Shein:
             soup = BeautifulSoup(html_content, "lxml")  # Parse HTML content with lxml parser
             
             is_international = self.detect_international(soup)
-            if is_international and not product_name.startswith("INTERNACIONAL"):
-                product_name = f"INTERNACIONAL - {product_name}"
+            if is_international and not product_name.startswith("International"):
+                product_name = f"International - {product_name}"
                 self.product_data["name"] = product_name  # Update product data with prefixed name
-                verbose_output(f"{BackgroundColors.YELLOW}Product name prefixed with 'INTERNACIONAL'.{Style.RESET_ALL}")
+                verbose_output(f"{BackgroundColors.YELLOW}Product name prefixed with 'International'.{Style.RESET_ALL}")
             
             output_dir = self.create_output_directory(product_name)  # Create output directory for product
             
