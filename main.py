@@ -113,6 +113,7 @@ INPUT_DIRECTORY = "./Inputs/"  # The path to the input directory
 INPUT_FILE = f"{INPUT_DIRECTORY}urls.txt"  # The path to the input file
 OUTPUT_DIRECTORY = "./Outputs/"  # The path to the output directory
 OUTPUT_FILE = f"{OUTPUT_DIRECTORY}output.txt"  # The path to the output file
+DELETE_LOCAL_HTML_FILE = False  # Whether to delete the original local HTML/zip input after processing
 
 # Environment Variables:
 ENV_PATH = "./.env"  # The path to the .env file
