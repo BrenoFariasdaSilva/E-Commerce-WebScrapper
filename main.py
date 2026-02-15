@@ -649,7 +649,6 @@ def resolve_local_html_path(local_html_path):
                         verbose_output(f"{BackgroundColors.GREEN}Resolved base path to zip file: {BackgroundColors.CYAN}{test_path}{Style.RESET_ALL}")  # Inform about zip resolution
                         return test_path  # Return zip file path
     
-    print(f"{BackgroundColors.YELLOW}Warning: Could not resolve local HTML path: {BackgroundColors.CYAN}{local_html_path}{BackgroundColors.YELLOW}. File may not exist.{Style.RESET_ALL}")  # Warn user
     return local_html_path  # Return original path even if not found
 
 
