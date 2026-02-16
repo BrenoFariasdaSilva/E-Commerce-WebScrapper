@@ -214,6 +214,68 @@ class Amazon:
             )  # End of verbose output call
 
 
+    def find_image_urls(self, soup: BeautifulSoup) -> List[str]:
+        """
+        Finds all image URLs from the product gallery.
+        Extracts full-size images from the gallery container.
+        
+        :param soup: BeautifulSoup object containing the parsed HTML
+        :return: List of image URLs
+        """
+        
+        image_urls: List[str] = []  # Initialize empty list to store image URLs
+        seen_urls: set = set()  # Track URLs to avoid duplicates
+        
+        verbose_output(  # Output status message
+            f"{BackgroundColors.GREEN}Extracting image URLs from gallery...{Style.RESET_ALL}"
+        )  # End of verbose output call
+        
+        try:  # Attempt image extraction with error handling
+            gallery = soup.find("div", HTML_SELECTORS["gallery"])  # Find gallery container
+            
+            if not gallery:  # Check if gallery was found
+                verbose_output(  # Output warning message
+                    f"{BackgroundColors.YELLOW}Gallery container not found.{Style.RESET_ALL}"
+                )  # End of verbose output call
+                return image_urls  # Return empty list if gallery not found
+            
+            images = gallery.find_all("img")  # Find all image tags in gallery
+            for img in images:  # Iterate through each image
+                from typing import cast
+
+                img_url = None  # Initialize URL variable
+
+                if img.has_attr("src"):  # Check if img has src attribute
+                    img_url = cast(str, img.get("src", ""))  # Get src attribute value as str
+                elif img.has_attr("data-src"):  # Check if img has data-src attribute
+                    img_url = cast(str, img.get("data-src", ""))  # Get data-src attribute value as str
+                elif img.has_attr("data-old-hires"):  # Check if img has high-res data attribute
+                    img_url = cast(str, img.get("data-old-hires", ""))  # Get high-res URL as str
+                
+                if img_url:  # Check if URL was found
+                    if img_url.startswith("//"):  # Check if protocol-relative URL
+                        img_url = "https:" + img_url  # Add HTTPS protocol
+                    elif img_url.startswith("/"):  # Check if absolute path
+                        img_url = "https://www.amazon.com.br" + img_url  # Build complete URL
+                    
+                    if img_url not in seen_urls:  # Check if URL is not duplicate
+                        if "images-amazon.com" in img_url or "ssl-images-amazon.com" in img_url:  # Validate Amazon image domain
+                            image_urls.append(img_url)  # Add URL to list
+                            seen_urls.add(img_url)  # Mark URL as seen
+                            verbose_output(  # Output found image
+                                f"{BackgroundColors.CYAN}Image found: {img_url}{Style.RESET_ALL}"
+                            )  # End of verbose output call
+        
+        except Exception as e:  # Catch any exceptions during image extraction
+            print(f"{BackgroundColors.YELLOW}Warning during image extraction: {e}{Style.RESET_ALL}")  # Warn user about extraction issues
+        
+        verbose_output(  # Output total count
+            f"{BackgroundColors.GREEN}Found {BackgroundColors.CYAN}{len(image_urls)}{BackgroundColors.GREEN} images.{Style.RESET_ALL}"
+        )  # End of verbose output call
+        
+        return image_urls  # Return list of image URLs
+
+
     def find_video_urls(self, soup: BeautifulSoup) -> List[str]:
         """
         Finds all video URLs from the product page.
