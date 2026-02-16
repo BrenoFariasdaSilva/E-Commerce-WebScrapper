@@ -214,6 +214,64 @@ class Amazon:
             )  # End of verbose output call
 
 
+    def download_media(self) -> List[str]:
+        """
+        Downloads product media and creates snapshot.
+        Works for both online (browser) and offline (local HTML) modes.
+
+        :return: List of downloaded file paths
+        """
+
+        verbose_output(  # Output status message
+            f"{BackgroundColors.GREEN}Processing product media...{Style.RESET_ALL}"
+        )  # End of verbose output call
+
+        downloaded_files: List[str] = []  # Initialize empty list to track downloaded file paths
+        
+        try:  # Attempt media processing with error handling
+            if not self.html_content:  # Validate HTML content exists
+                print(f"{BackgroundColors.RED}No HTML content available for media download.{Style.RESET_ALL}")  # Alert user no content
+                return downloaded_files  # Return empty list
+            
+            if not self.product_data:  # Validate product data exists
+                print(f"{BackgroundColors.RED}No product data available for media download.{Style.RESET_ALL}")  # Alert user no data
+                return downloaded_files  # Return empty list
+            
+            product_name = self.product_data.get("name", "Unknown Product")  # Get product name or default
+            # Use shared helper to sanitize and enforce 80-character limit.
+            product_name_safe = normalize_product_dir_name(product_name, replace_with="", title_case=False)  # Normalize name for directory usage
+            
+            output_dir = self.create_output_directory(product_name_safe)  # Create product output directory
+            
+            soup = BeautifulSoup(self.html_content, "html.parser")  # Parse HTML content
+            
+            images = self.download_product_images(soup, output_dir)  # Download all product images
+            downloaded_files.extend(images)  # Add image paths to downloaded files
+            
+            videos = self.download_product_videos(soup, output_dir)  # Download all product videos
+            downloaded_files.extend(videos)  # Add video paths to downloaded files
+            
+            asset_map = self.collect_assets(self.html_content, output_dir)  # Collect page assets
+            
+            snapshot_path = self.save_snapshot(self.html_content, output_dir, asset_map)  # Save page snapshot
+            if snapshot_path:  # Check if snapshot was saved
+                downloaded_files.append(snapshot_path)  # Add snapshot to downloaded files
+            
+            desc_path = self.create_product_description_file(  # Create description file
+                self.product_data,  # Pass product data
+                output_dir,  # Pass output directory
+                product_name_safe,  # Pass safe product name
+                self.url  # Pass original URL
+            )  # End of function call
+            if desc_path:  # Check if description file was created
+                downloaded_files.append(desc_path)  # Add description to downloaded files
+            
+        except Exception as e:  # Catch any exceptions during media processing
+            print(f"{BackgroundColors.RED}Error during media download: {e}{Style.RESET_ALL}")  # Alert user about error
+        
+        return downloaded_files  # Return list of all downloaded file paths
+
+
     def scrape(self, verbose: bool = VERBOSE) -> Optional[Dict[str, Any]]:
         """
         Main scraping method that orchestrates the entire scraping process.
