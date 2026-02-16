@@ -214,6 +214,55 @@ class Amazon:
             )  # End of verbose output call
 
 
+    def detect_international(self, soup: BeautifulSoup) -> bool:
+        """
+        Detects if the product is from an international seller by checking for the foreign seller badge.
+        Looks for the foreign seller badge image or related import tax text.
+        
+        :param soup: BeautifulSoup object containing the parsed HTML
+        :return: True if product is international, False otherwise
+        """
+        
+        verbose_output(  # Output status message
+            f"{BackgroundColors.GREEN}Checking if product is from international seller...{Style.RESET_ALL}"
+        )  # End of verbose output call
+        
+        try:  # Attempt international detection with error handling
+            badge_url = HTML_SELECTORS["foreign_seller_badge"]  # Get foreign seller badge URL from selectors
+            
+            images = soup.find_all("img", src=True)  # Find all image tags with src attribute
+            for img in images:  # Iterate through all images
+                if badge_url in img["src"]:  # Check if badge URL is in image source
+                    verbose_output(  # Output detection message
+                        f"{BackgroundColors.CYAN}International seller badge detected.{Style.RESET_ALL}"
+                    )  # End of verbose output call
+                    return True  # Return True if badge found
+            
+            import_text_patterns = [  # List of text patterns indicating international product
+                "tributos de importação estão incluídos",  # Import taxes included text
+                "Você não terá custos extras",  # No extra costs text
+                "produto internacional",  # International product text
+                "foreign seller",  # Foreign seller text
+            ]  # End of patterns list
+            
+            page_text = soup.get_text().lower()  # Get all page text in lowercase
+            for pattern in import_text_patterns:  # Iterate through text patterns
+                if pattern.lower() in page_text:  # Check if pattern exists in page text
+                    verbose_output(  # Output detection message
+                        f"{BackgroundColors.CYAN}International import text detected.{Style.RESET_ALL}"
+                    )  # End of verbose output call
+                    return True  # Return True if pattern found
+            
+            verbose_output(  # Output not found message
+                f"{BackgroundColors.GREEN}No international seller indicators found.{Style.RESET_ALL}"
+            )  # End of verbose output call
+            return False  # Return False if no indicators found
+            
+        except Exception as e:  # Catch any exceptions during detection
+            print(f"{BackgroundColors.YELLOW}Warning during international detection: {e}{Style.RESET_ALL}")  # Warn user about detection issues
+            return False  # Return False on error
+
+
     def prefix_international_name(self, product_name: str) -> str:
         """
         Adds "International - " prefix to product name if not already present.
