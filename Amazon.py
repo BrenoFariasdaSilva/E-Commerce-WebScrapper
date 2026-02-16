@@ -214,6 +214,31 @@ class Amazon:
             )  # End of verbose output call
 
 
+    def close_browser(self):
+        """
+        Safely closes the browser and Playwright instances.
+
+        :return: None
+        """
+
+        verbose_output(  # Output status message to user
+            f"{BackgroundColors.GREEN}Closing browser...{Style.RESET_ALL}"
+        )  # End of verbose output call
+
+        try:  # Attempt to close browser resources with error handling
+            if self.page:  # Check if page instance exists
+                self.page.close()  # Close the browser page
+            if self.browser:  # Check if browser instance exists
+                self.browser.close()  # Close the browser
+            if self.playwright:  # Check if playwright instance exists
+                self.playwright.stop()  # Stop the playwright context
+            verbose_output(  # Output success message
+                f"{BackgroundColors.GREEN}Browser closed successfully.{Style.RESET_ALL}"
+            )  # End of verbose output call
+        except Exception as e:  # Catch any exceptions during browser close
+            print(f"{BackgroundColors.YELLOW}Warning during browser close: {e}{Style.RESET_ALL}")  # Warn user about close issues without failing
+
+
     def load_page(self) -> bool:
         """
         Loads the product page and waits for network idle.
