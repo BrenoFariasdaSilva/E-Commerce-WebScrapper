@@ -214,6 +214,44 @@ class Amazon:
             )  # End of verbose output call
 
 
+    def wait_full_render(self) -> None:
+        """
+        Waits for the page to be fully rendered with all dynamic content.
+
+        :return: None
+        """
+
+        verbose_output(  # Output status message to user
+            f"{BackgroundColors.GREEN}Waiting for full page render...{Style.RESET_ALL}"
+        )  # End of verbose output call
+
+        if self.page is None:  # Validate that page instance exists before waiting
+            print(f"{BackgroundColors.YELLOW}Warning: Page not initialized, skipping render wait.{Style.RESET_ALL}")  # Warn user that render wait will be skipped
+            return  # Exit method early if page is not initialized
+
+        try:  # Attempt waiting for render with error handling
+            selectors_to_wait = [  # List of key selectors to wait for
+                "span#productTitle",  # Product title selector
+                "span.a-price",  # Price selector
+                "img"  # Image selector
+            ]  # End of selectors list
+            
+            for selector in selectors_to_wait:  # Iterate through each selector
+                try:  # Try waiting for each selector
+                    self.page.wait_for_selector(selector, timeout=5000)  # Wait up to 5 seconds for selector
+                except:  # Ignore if selector not found
+                    pass  # Continue to next selector
+
+            time.sleep(2)  # Additional wait time to ensure all dynamic content is rendered
+            
+            verbose_output(  # Output success message
+                f"{BackgroundColors.GREEN}Page fully rendered.{Style.RESET_ALL}"
+            )  # End of verbose output call
+
+        except Exception as e:  # Catch any exceptions during render wait
+            print(f"{BackgroundColors.YELLOW}Warning during render wait: {e}{Style.RESET_ALL}")  # Warn user about render wait issues without failing
+
+
     def get_rendered_html(self) -> Optional[str]:
         """
         Gets the fully rendered HTML content after JavaScript execution.
