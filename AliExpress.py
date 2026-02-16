@@ -215,6 +215,71 @@ class AliExpress:  # AliExpress scraper class preserving structure and methods
             )  # End of verbose output call
 
 
+    def scrape(self, verbose: bool = VERBOSE) -> Optional[Dict[str, Any]]:
+        """
+        Main scraping method that orchestrates the entire scraping process.
+        Supports both online scraping (via browser) and offline scraping (from local HTML file).
+
+        :param verbose: Boolean flag to enable verbose output
+        :return: Dictionary containing all scraped data and downloaded file paths
+        """
+
+        verbose_output(  # Display scraping start message (verbose)
+            f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Starting {BackgroundColors.CYAN}AliExpress{BackgroundColors.GREEN} Scraping process...{Style.RESET_ALL}"
+        )  # End of verbose_output call
+        
+        try:  # Attempt scraping process with error handling
+            if self.local_html_path:  # If local HTML file path is provided
+                verbose_output(  # Display offline mode message (verbose)
+                    f"{BackgroundColors.GREEN}Using offline mode with local HTML file{Style.RESET_ALL}"
+                )  # End of verbose_output call
+                
+                html_content = self.read_local_html()  # Read HTML content from local file
+                if not html_content:  # Verify if HTML reading failed
+                    return None  # Return None if HTML is unavailable
+                
+                self.html_content = html_content  # Store HTML content for later use
+                
+            else:  # Online scraping mode
+                verbose_output(  # Display online mode message (verbose)
+                    f"{BackgroundColors.GREEN}Using online mode with browser automation{Style.RESET_ALL}"
+                )  # End of verbose_output call
+                
+                self.launch_browser()  # Initialize and launch browser instance
+                
+                if not self.load_page():  # Attempt to load product page
+                    return None  # Return None if page loading failed
+                
+                self.wait_full_render()  # Wait for page to fully render with dynamic content
+                self.auto_scroll()  # Scroll page to trigger lazy-loaded content
+                
+                html_content = self.get_rendered_html()  # Extract fully rendered HTML content
+                if not html_content:  # Verify if HTML extraction failed
+                    return None  # Return None if HTML is unavailable
+                
+                self.html_content = html_content  # Store HTML content for later use
+            
+            product_info = self.scrape_product_info(html_content)  # Parse and extract product information
+            if not product_info:  # Verify if product info extraction failed
+                return None  # Return None if extraction failed
+            
+            downloaded_files = self.download_media()  # Download product media and create snapshot
+            product_info["downloaded_files"] = downloaded_files  # Add downloaded files to product info dictionary
+            
+            verbose_output(  # Display success message to user
+                f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}AliExpress scraping completed successfully!{Style.RESET_ALL}"
+            )  # End of verbose_output call
+            
+            return product_info  # Return complete product information with downloaded files
+            
+        except Exception as e:  # Catch any exceptions during scraping process
+            print(f"{BackgroundColors.RED}Scraping failed: {e}{Style.RESET_ALL}")  # Alert user about scraping failure
+            return None  # Return None to indicate scraping failed
+        finally:  # Always execute cleanup regardless of success or failure
+            if not self.local_html_path:  # Only close browser in online mode
+                self.close_browser()  # Close browser and release resources
+
+
 # Functions Definitions
 
 
