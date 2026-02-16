@@ -606,13 +606,20 @@ class Amazon:
             price_container = soup.find(tag, attrs)  # Search for old price container element
             if price_container:  # Check if container was found
                 try:  # Attempt to extract price components
-                    price_text = price_container.get_text(strip=True)  # Extract all text from container
-                    
-                    if price_text:  # Check if text exists
-                        verbose_output(  # Output found old price
-                            f"{BackgroundColors.GREEN}Old price found: {BackgroundColors.CYAN}{price_text}{Style.RESET_ALL}"
-                        )  # End of verbose output call
-                        return price_text  # Return extracted price text
+                    raw_text = price_container.get_text(" ", strip=True)  # Extract all text, preserve spaces between parts
+                    price_text = re.sub(r"\s+", " ", raw_text).strip()  # Normalize whitespace to single spaces and trim
+
+                    match = re.search(r"(R\$\s?\d{1,3}(?:[\.\d]{0,}|(?:\.\d{3})*)(?:,\d{2})?)", price_text)  # Regex to match Brazilian currency format
+                    if match:  # If regex match is found, use the first match group as the cleaned price
+                        cleaned = match.group(1)  # Extract the matched price string
+                    else:  # If no match is found, fallback to taking the first part of the text as a last resort
+                        cleaned = price_text.split()[0] if price_text else price_text  # Take the first word as fallback if price text exists, otherwise use the raw text
+
+                    if cleaned:  # Check if cleaned price is not empty
+                        verbose_output(  # Output found old price (cleaned)
+                            f"{BackgroundColors.GREEN}Old price found: {BackgroundColors.CYAN}{cleaned}{Style.RESET_ALL}"
+                        )
+                        return cleaned  # Return the cleaned old price string
                 except Exception as e:  # Catch exceptions during extraction
                     continue  # Try next selector on error
         
