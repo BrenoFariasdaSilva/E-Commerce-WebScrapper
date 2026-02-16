@@ -214,6 +214,35 @@ class Amazon:
             )  # End of verbose output call
 
 
+    def download_product_videos(self, soup: BeautifulSoup, output_dir: str) -> List[str]:
+        """
+        Downloads all product videos from the gallery.
+        
+        :param soup: BeautifulSoup object containing the parsed HTML
+        :param output_dir: Directory to save videos
+        :return: List of downloaded video file paths
+        """
+        
+        downloaded_videos: List[str] = []  # Initialize list to track downloaded videos
+        
+        verbose_output(  # Output status message
+            f"{BackgroundColors.GREEN}Downloading product videos...{Style.RESET_ALL}"
+        )  # End of verbose output call
+        
+        video_urls = self.find_video_urls(soup)  # Get all video URLs from gallery
+        
+        for idx, video_url in enumerate(video_urls, 1):  # Iterate with counter starting at 1
+            video_path = self.download_single_video(video_url, output_dir, idx)  # Download video
+            if video_path:  # Check if download succeeded
+                downloaded_videos.append(video_path)  # Add to downloaded list
+        
+        verbose_output(  # Output success message with count
+            f"{BackgroundColors.GREEN}Downloaded {BackgroundColors.CYAN}{len(downloaded_videos)}{BackgroundColors.GREEN} videos.{Style.RESET_ALL}"
+        )  # End of verbose output call
+        
+        return downloaded_videos  # Return list of downloaded video paths
+
+
     def download_media(self) -> List[str]:
         """
         Downloads product media and creates snapshot.
