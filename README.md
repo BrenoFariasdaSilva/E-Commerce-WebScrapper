@@ -86,7 +86,7 @@ The scraper extracts detailed product data including names, prices, discount inf
 
 ## Features
 
-- **Multi-Platform Support**: Scrapes Mercado Livre, Shein, and Shopee with dedicated, platform-specific scrapers
+ - **Multi-Platform Support**: Scrapes AliExpress, Amazon, Mercado Livre, Shein, and Shopee with dedicated, platform-specific scrapers
 - **Authenticated Scraping**: Uses existing Chrome profiles to bypass login requirements for Shopee and Shein
 - **Intelligent Path Resolution**: Automatically resolves local HTML paths with multiple fallback strategies
 - **Batch Processing**: Process multiple URLs from input files with configurable delays between requests
