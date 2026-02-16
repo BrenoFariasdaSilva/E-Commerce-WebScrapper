@@ -214,6 +214,46 @@ class Amazon:
             )  # End of verbose output call
 
 
+    def auto_scroll(self) -> None:
+        """
+        Automatically scrolls the page to trigger lazy-loaded content.
+
+        :return: None
+        """
+
+        verbose_output(  # Output status message to user
+            f"{BackgroundColors.GREEN}Auto-scrolling to load lazy content...{Style.RESET_ALL}"
+        )  # End of verbose output call
+
+        if self.page is None:  # Validate that page instance exists before scrolling
+            print(f"{BackgroundColors.YELLOW}Warning: Page not initialized, skipping scroll.{Style.RESET_ALL}")  # Warn user that scrolling will be skipped
+            return  # Exit method early if page is not initialized
+
+        try:  # Attempt auto-scrolling with error handling
+            previous_height = self.page.evaluate("document.body.scrollHeight")  # Get initial page height for comparison
+            
+            while True:  # Loop until no more content loads
+                self.page.evaluate(f"window.scrollBy(0, {SCROLL_STEP})")  # Scroll down by step amount
+                time.sleep(SCROLL_PAUSE_TIME)  # Pause to allow content to load
+                
+                current_height = self.page.evaluate("document.body.scrollHeight")  # Get current page height
+                
+                if current_height == previous_height:  # Check if page height changed
+                    break  # Exit loop if no new content loaded
+                
+                previous_height = current_height  # Update previous height for next iteration
+
+            self.page.evaluate("window.scrollTo(0, 0)")  # Scroll back to top of page
+            time.sleep(SCROLL_PAUSE_TIME)  # Pause briefly after scrolling to top
+            
+            verbose_output(  # Output success message
+                f"{BackgroundColors.GREEN}Auto-scroll completed.{Style.RESET_ALL}"
+            )  # End of verbose output call
+
+        except Exception as e:  # Catch any exceptions during auto-scroll
+            print(f"{BackgroundColors.YELLOW}Warning during auto-scroll: {e}{Style.RESET_ALL}")  # Warn user about scroll issues without failing
+
+
     def wait_full_render(self) -> None:
         """
         Waits for the page to be fully rendered with all dynamic content.
