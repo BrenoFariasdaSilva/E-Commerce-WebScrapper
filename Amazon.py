@@ -214,6 +214,80 @@ class Amazon:
             )  # End of verbose output call
 
 
+    def download_single_image(self, img_url: str, output_dir: str, image_count: int) -> Optional[str]:
+        """
+        Downloads or copies a single image to the specified output directory.
+        Supports HTTP downloads and local file copying for offline mode.
+        
+        :param img_url: URL of the image to download (HTTP URL or local path)
+        :param output_dir: Directory to save the image
+        :param image_count: Counter for generating unique filenames
+        :return: Path to downloaded image file or None if download failed
+        """
+        
+        try:  # Attempt image download with error handling
+            if img_url.startswith("file://") or (not img_url.startswith("http") and os.path.exists(img_url)):  # Check if local file
+                local_img_path = img_url.replace("file://", "")  # Remove file protocol
+                
+                if not os.path.exists(local_img_path):  # Verify file exists
+                    verbose_output(  # Output not found message
+                        f"{BackgroundColors.YELLOW}Local image not found: {local_img_path}{Style.RESET_ALL}"
+                    )  # End of verbose output call
+                    return None  # Return None if file doesn't exist
+                
+                file_ext = os.path.splitext(local_img_path)[1] or ".jpg"  # Get file extension or default
+                image_filename = f"image_{image_count}{file_ext}"  # Generate unique filename
+                image_path = os.path.join(output_dir, image_filename)  # Build full destination path
+                
+                shutil.copy2(local_img_path, image_path)  # Copy file preserving metadata
+                
+                verbose_output(  # Output success message
+                    f"{BackgroundColors.GREEN}Image copied: {BackgroundColors.CYAN}{image_filename}{Style.RESET_ALL}"
+                )  # End of verbose output call
+                
+                return image_path  # Return path to copied image
+            
+            else:  # Handle HTTP URL download
+                import requests  # Import requests library for HTTP
+                
+                response = requests.get(img_url, timeout=30, stream=True)  # Send GET request with timeout
+                response.raise_for_status()  # Raise exception for bad status codes
+                
+                content_type = response.headers.get("content-type", "")  # Get content type header
+                if "image" not in content_type:  # Validate content is image
+                    verbose_output(  # Output warning message
+                        f"{BackgroundColors.YELLOW}URL does not point to an image: {img_url}{Style.RESET_ALL}"
+                    )  # End of verbose output call
+                    return None  # Return None if not image
+                
+                file_ext = ".jpg"  # Default extension
+                if "jpeg" in content_type or "jpg" in content_type:  # Check for JPEG
+                    file_ext = ".jpg"  # Set JPEG extension
+                elif "png" in content_type:  # Check for PNG
+                    file_ext = ".png"  # Set PNG extension
+                elif "gif" in content_type:  # Check for GIF
+                    file_ext = ".gif"  # Set GIF extension
+                elif "webp" in content_type:  # Check for WebP
+                    file_ext = ".webp"  # Set WebP extension
+                
+                image_filename = f"image_{image_count}{file_ext}"  # Generate unique filename
+                image_path = os.path.join(output_dir, image_filename)  # Build full destination path
+                
+                with open(image_path, "wb") as file:  # Open file for binary writing
+                    for chunk in response.iter_content(chunk_size=8192):  # Stream content in chunks
+                        file.write(chunk)  # Write chunk to file
+                
+                verbose_output(  # Output success message
+                    f"{BackgroundColors.GREEN}Image downloaded: {BackgroundColors.CYAN}{image_filename}{Style.RESET_ALL}"
+                )  # End of verbose output call
+                
+                return image_path  # Return path to downloaded image
+        
+        except Exception as e:  # Catch any exceptions during download
+            print(f"{BackgroundColors.YELLOW}Failed to download image {image_count}: {e}{Style.RESET_ALL}")  # Warn user about download failure
+            return None  # Return None to indicate download failed
+
+
     def download_single_video(self, video_url: str, output_dir: str, video_count: int) -> Optional[str]:
         """
         Downloads or copies a single video to the specified output directory.
