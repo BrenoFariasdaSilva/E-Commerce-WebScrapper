@@ -214,6 +214,28 @@ class Amazon:
             )  # End of verbose output call
 
 
+    def to_sentence_case(self, text: str) -> str:
+        """
+        Converts text to sentence case (first letter of each sentence uppercase).
+
+        :param text: The text to convert
+        :return: Text in sentence case
+        """
+
+        if not text:  # Check if text is empty or None
+            return text  # Return as-is if empty
+
+        sentences = re.split(r"([.!?]\s*)", text)  # Keep the delimiters
+
+        result = []  # Initialize list to hold processed sentences
+        for i, sentence in enumerate(sentences):  # Iterate with index
+            if i % 2 == 0 and sentence:  # Process actual sentences (not delimiters)
+                sentence = sentence[0].upper() + sentence[1:].lower() if sentence else sentence  # Capitalize first letter
+            result.append(sentence)  # Add processed sentence to result
+
+        return "".join(result)  # Join all sentences and delimiters back into a single string
+
+
     def download_single_image(self, img_url: str, output_dir: str, image_count: int) -> Optional[str]:
         """
         Downloads or copies a single image to the specified output directory.
