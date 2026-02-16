@@ -74,6 +74,7 @@ from colorama import Style  # Colorize terminal text output
 from Logger import Logger  # Custom logging functionality for output redirection
 from pathlib import Path  # Handle filesystem paths in object-oriented way
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError  # Browser automation framework with timeout handling
+from product_utils import normalize_product_dir_name  # Centralized product dir name normalization
 from typing import Optional, Dict, Any, List, Tuple, cast  # Type hinting support for better code clarity
 from urllib.parse import urljoin, urlparse  # Parse and manipulate URLs for asset collection
 
@@ -480,10 +481,7 @@ class Shopee:
             name_element = soup.find(tag, attrs if attrs else None)  # type: ignore[arg-type]  # Search for element matching current selector
             if name_element:  # Verify if matching element was found
                     raw_product_name = name_element.get_text(separator=" ", strip=True)  # Extract raw text, preserve single spaces between parts
-                    raw_product_name = raw_product_name.replace("\u00A0", " ")  # Replace NBSP with normal space
-                    raw_product_name = re.sub(r"\s+", " ", raw_product_name).strip()  # Collapse multiple whitespace to single spaces
-                    product_name = re.sub(r'[<>:"/\\|?*]', "_", raw_product_name.title())  # Sanitize filename by replacing invalid characters and title-casing
-                    product_name = re.sub(r"\s+", " ", product_name).strip()  # Ensure no repeated spaces after title-casing
+                    product_name = normalize_product_dir_name(raw_product_name, replace_with="_", title_case=True)  # Normalize name for directory usage
                     if product_name and product_name != "":  # Validate that extracted name is not empty
                         verbose_output(  # Log successfully extracted product name
                             f"{BackgroundColors.GREEN}Product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}"
