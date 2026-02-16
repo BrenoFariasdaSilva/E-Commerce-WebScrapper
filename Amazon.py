@@ -214,6 +214,62 @@ class Amazon:
             )  # End of verbose output call
 
 
+    def scrape(self, verbose: bool = VERBOSE) -> Optional[Dict[str, Any]]:
+        """
+        Main scraping method that orchestrates the entire scraping process.
+        Supports both online scraping (via browser) and offline scraping (from local HTML file).
+
+        :param verbose: Boolean flag to enable verbose output
+        :return: Dictionary containing all scraped data and downloaded file paths
+        """
+
+        verbose_output(  # Output starting message
+            f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Starting {BackgroundColors.CYAN}Amazon{BackgroundColors.GREEN} Scraping process...{Style.RESET_ALL}"
+        )  # End of verbose_output call
+        
+        try:  # Attempt scraping process with error handling
+            if self.local_html_path:  # Check if offline mode is enabled
+                self.html_content = self.read_local_html()  # Read HTML from local file
+                if not self.html_content:  # Validate HTML was read successfully
+                    print(f"{BackgroundColors.RED}Failed to read local HTML file.{Style.RESET_ALL}")  # Alert user about read failure
+                    return None  # Return None to indicate failure
+            else:  # Handle online scraping mode
+                self.launch_browser()  # Launch browser instance
+                
+                if not self.load_page():  # Load product page
+                    print(f"{BackgroundColors.RED}Failed to load product page.{Style.RESET_ALL}")  # Alert user about load failure
+                    return None  # Return None to indicate failure
+                
+                self.auto_scroll()  # Scroll page to load lazy content
+                self.wait_full_render()  # Wait for full page render
+                
+                self.html_content = self.get_rendered_html()  # Get rendered HTML content
+                if not self.html_content:  # Validate HTML was extracted
+                    print(f"{BackgroundColors.RED}Failed to extract HTML content.{Style.RESET_ALL}")  # Alert user about extraction failure
+                    return None  # Return None to indicate failure
+            
+            self.product_data = self.scrape_product_info(self.html_content)  # Scrape product information
+            if not self.product_data:  # Validate product data was extracted
+                print(f"{BackgroundColors.RED}Failed to scrape product information.{Style.RESET_ALL}")  # Alert user about scraping failure
+                return None  # Return None to indicate failure
+            
+            downloaded_files = self.download_media()  # Download product media
+            self.product_data["downloaded_files"] = downloaded_files  # Add downloaded files to product data
+            
+            verbose_output(  # Output completion message
+                f"{BackgroundColors.BOLD}{BackgroundColors.GREEN}Scraping completed successfully!{Style.RESET_ALL}"
+            )  # End of verbose_output call
+            
+            return self.product_data  # Return complete product data dictionary
+            
+        except Exception as e:  # Catch any exceptions during scraping process
+            print(f"{BackgroundColors.RED}Error during scraping: {e}{Style.RESET_ALL}")  # Alert user about error
+            return None  # Return None to indicate failure
+        finally:  # Always execute cleanup
+            if not self.local_html_path:  # Only close browser if online mode
+                self.close_browser()  # Close browser and cleanup resources
+
+
 # Functions Definitions:
 
 
