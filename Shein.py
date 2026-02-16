@@ -76,6 +76,7 @@ from colorama import Style  # For coloring the terminal
 from Logger import Logger  # For logging output to both terminal and file
 from pathlib import Path  # For handling file paths
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError  # For browser automation
+from product_utils import normalize_product_dir_name  # Centralized product dir name normalization
 from typing import Optional, Dict, Any, List, Tuple, cast  # For type hints
 from urllib.parse import urljoin, urlparse  # For URL manipulation
 
@@ -405,10 +406,7 @@ class Shein:
             name_element = soup.find(tag, attrs if attrs else None)  # Search for element matching current selector
             if name_element:  # Verify if matching element was found
                     raw_product_name = name_element.get_text(separator=" ", strip=True)  # Extract raw text, preserve single spaces between parts
-                    raw_product_name = raw_product_name.replace("\u00A0", " ")  # Replace NBSP with normal space
-                    raw_product_name = re.sub(r"\s+", " ", raw_product_name).strip()  # Collapse multiple whitespace to single spaces
-                    product_name = re.sub(r'[<>:"/\\|?*]', "_", raw_product_name.title())  # Sanitize filename and apply title case for consistent formatting
-                    product_name = re.sub(r"\s+", " ", product_name).strip()  # Ensure no repeated spaces after title-casing
+                    product_name = normalize_product_dir_name(raw_product_name, replace_with="_", title_case=True)  # Normalize name for directory usage
                     if product_name and product_name != "":  # Validate that extracted name is not empty
                         verbose_output(f"{BackgroundColors.GREEN}Product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}")  # Log successfully extracted (formatted) product name
                         return product_name  # Return the sanitized, title-cased product name immediately when found
