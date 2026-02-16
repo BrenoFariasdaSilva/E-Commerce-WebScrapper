@@ -214,6 +214,50 @@ class Amazon:
             )  # End of verbose output call
 
 
+    def scrape_product_info(self, html_content: str) -> Optional[Dict[str, Any]]:
+        """
+        Scrapes product information from rendered HTML content.
+
+        :param html_content: Rendered HTML string
+        :return: Dictionary containing the scraped product data
+        """
+
+        verbose_output(  # Output status message
+            f"{BackgroundColors.GREEN}Parsing product information...{Style.RESET_ALL}"
+        )  # End of verbose output call
+
+        try:  # Attempt parsing with error handling
+            soup = BeautifulSoup(html_content, "html.parser")  # Parse HTML content into BeautifulSoup object
+            
+            product_name = self.extract_product_name(soup)  # Extract product name
+            is_international = self.detect_international(soup)  # Detect international seller
+            if is_international:  # Check if product is international
+                product_name = self.prefix_international_name(product_name)  # Add international prefix
+            
+            current_price = self.extract_current_price(soup)  # Extract current price
+            old_price = self.extract_old_price(soup)  # Extract old price
+            discount = self.extract_discount_percentage(soup)  # Extract discount percentage
+            description = self.extract_product_description(soup)  # Extract product description
+            product_details = self.extract_product_details(soup)  # Extract product details table
+            
+            product_data = {  # Build product data dictionary
+                "name": product_name,  # Store product name
+                "current_price": current_price,  # Store current price
+                "old_price": old_price,  # Store old price
+                "discount_percentage": discount,  # Store discount percentage
+                "description": description,  # Store description
+                "product_details": product_details,  # Store details table
+                "is_international": is_international,  # Store international flag
+            }  # End of dictionary construction
+            
+            self.print_product_info(product_data)  # Print extracted information
+            return product_data  # Return complete product data
+            
+        except Exception as e:  # Catch any exceptions during scraping
+            print(f"{BackgroundColors.RED}Failed to scrape product info: {e}{Style.RESET_ALL}")  # Alert user about scraping failure
+            return None  # Return None to indicate scraping failed
+
+
     def create_directory(self, full_directory_name, relative_directory_name):
         """
         Creates a directory.
