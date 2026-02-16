@@ -214,6 +214,62 @@ class Amazon:
             )  # End of verbose output call
 
 
+    def extract_product_details(self, soup: BeautifulSoup) -> Dict[str, str]:
+        """
+        Extracts the product details table from the parsed HTML soup.
+        
+        :param soup: BeautifulSoup object containing the parsed HTML
+        :return: Dictionary of product details or empty dict if not found
+        """
+        
+        details_dict: Dict[str, str] = {}  # Initialize empty dictionary for details
+        
+        verbose_output(  # Output status message
+            f"{BackgroundColors.GREEN}Extracting product details table...{Style.RESET_ALL}"
+        )  # End of verbose output call
+        
+        try:  # Attempt table extraction with error handling
+            details_section = soup.find("div", HTML_SELECTORS["detail_section"])  # Find product details section
+            if not details_section:  # Check if section was found
+                verbose_output(  # Output not found message
+                    f"{BackgroundColors.YELLOW}Product details section not found.{Style.RESET_ALL}"
+                )  # End of verbose output call
+                return details_dict  # Return empty dictionary
+            
+            details_table = details_section.find("table", HTML_SELECTORS["detail_table"])  # Find details table
+            if not details_table:  # Check if table was found
+                verbose_output(  # Output not found message
+                    f"{BackgroundColors.YELLOW}Product details table not found.{Style.RESET_ALL}"
+                )  # End of verbose output call
+                return details_dict  # Return empty dictionary
+            
+            rows = details_table.find_all("tr")  # Find all table rows
+            for row in rows:  # Iterate through each row
+                try:  # Attempt to extract row data
+                    key_cell = row.find("th", {"class": "prodDetSectionEntry"})  # Find key cell
+                    value_cell = row.find("td", {"class": "prodDetAttrValue"})  # Find value cell
+                    
+                    if key_cell and value_cell:  # Check if both cells exist
+                        key = key_cell.get_text(strip=True)  # Extract key text
+                        value = value_cell.get_text(strip=True)  # Extract value text
+                        
+                        key = re.sub(r"\s+", " ", key)  # Normalize key spacing
+                        value = re.sub(r"\s+", " ", value)  # Normalize value spacing
+                        
+                        details_dict[key] = value  # Add key-value pair to dictionary
+                except Exception as e:  # Catch exceptions during row extraction
+                    continue  # Skip row on error
+            
+            verbose_output(  # Output success message with count
+                f"{BackgroundColors.GREEN}Extracted {BackgroundColors.CYAN}{len(details_dict)}{BackgroundColors.GREEN} product details.{Style.RESET_ALL}"
+            )  # End of verbose output call
+            
+        except Exception as e:  # Catch any exceptions during table extraction
+            print(f"{BackgroundColors.YELLOW}Warning during details extraction: {e}{Style.RESET_ALL}")  # Warn user about extraction issues
+        
+        return details_dict  # Return dictionary with extracted details
+
+
     def find_image_urls(self, soup: BeautifulSoup) -> List[str]:
         """
         Finds all image URLs from the product gallery.
