@@ -20,7 +20,7 @@ Description :
 
 Usage:
     from product_utils import normalize_product_dir_name
-    safe_name = normalize_product_dir_name(raw_name, replace_with="_", title_case=True)
+    safe_name = normalize_product_dir_name(raw_name, replace_with="", title_case=True)
 
 Returns:
     A sanitized string suitable for use as a directory name.
@@ -59,7 +59,7 @@ def verbose_output(true_string="", false_string=""):
         print(false_string)  # Output the false statement string
 
 
-def normalize_product_dir_name(raw_name: str, replace_with: str = "_", title_case: bool = True) -> str:
+def normalize_product_dir_name(raw_name: str, replace_with: str = "", title_case: bool = True) -> str:
     """
     Normalize and sanitize a product name for use as a directory name.
 
