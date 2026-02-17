@@ -618,175 +618,214 @@ class Shein:
     def extract_product_description(self, soup=None):
         """
         Extracts the product description from the parsed HTML soup.
-        First tries HTML extraction from class="product-intro__attr-list-text",
-        then tries structured specification table extraction from common-entry__content,
-        then tries goods_desc JSON field extraction from script tags.
-        
+        Aggregates text from multiple sources (HTML selectors, ProductIntroDescription,
+        structured specification fragments in script tags and goods_desc JSON) and
+        optionally returns structured attributes when ProductIntroDescription exists.
+
         :param soup: BeautifulSoup object containing the parsed HTML
-        :return: Product description string or "No description available" if not found
+        :return: Either a legacy string description or a dict {"text":..., "attributes":{...}}
         """
 
         if soup is None:  # Guard against None to avoid attribute access on None
             return "No description available"  # Default description when no soup provided
 
-        for tag, attrs in HTML_SELECTORS["description"]:  # Iterate through description selectors
-            description_element = soup.find(tag, attrs if attrs else None)  # Find element for each selector
-            if description_element:  # If an element was found
-                description = description_element.get_text(strip=True)  # Extract and strip text
-                description = self.to_sentence_case(description)  # Convert HTML description to sentence case
-                if description and len(description) > 10:  # If description is sufficiently long
-                    verbose_output(f"{BackgroundColors.GREEN}Description found from HTML ({len(description)} chars).{Style.RESET_ALL}")  # Log success
-                    return description  # Return formatted HTML description
+        html_description = None  # Hold first HTML-selector description found for compatibility
+        combined_fragments = []  # Accumulate description fragments from all methods
 
-        verbose_output(f"{BackgroundColors.YELLOW}HTML description not found, trying structured specification extraction...{Style.RESET_ALL}")  # Notify about next fallback
+        for tag, attrs in HTML_SELECTORS["description"]:  # Try selector-based HTML description first
+            description_element = soup.find(tag, attrs if attrs else None)  # Safe selector lookup
+            if description_element:  # If an element was found for this selector
+                html_description = description_element.get_text(strip=True)  # Extract raw text from element
+                html_description = self.to_sentence_case(html_description)  # Normalize sentence casing for readability
+                if html_description and len(html_description) > 10:  # Accept only reasonably long HTML descriptions
+                    verbose_output(f"{BackgroundColors.GREEN}Description found from HTML ({len(html_description)} chars).{Style.RESET_ALL}")  # Log successful extraction
+                combined_fragments.append(html_description or "")  # Add HTML description to aggregator (may be empty)
+                break  # Stop after first matching selector to preserve original priority
 
-        try:  # Attempt structured specification extraction
-            specifications = []  # Collect valid label:value pairs
-            script_tags = soup.find_all("script")  # Find all script tags in document
-            verbose_output(f"{BackgroundColors.CYAN}Searching through {len(script_tags)} script tags for specification table...{Style.RESET_ALL}")  # Log script tag count
-            
-            for script_tag in script_tags:  # Iterate through each script tag
-                if not script_tag.string:  # Skip script tags with no content
-                    continue
-                
-                script_content = str(script_tag.string)  # Convert script content to string
-                anchor_pos = script_content.find('class="common-entry__content"')  # Search for specification table anchor
-                
-                if anchor_pos == -1:  # Anchor not found in this script tag
-                    continue
-                
-                verbose_output(f"{BackgroundColors.GREEN}Found specification table anchor in script tag.{Style.RESET_ALL}")  # Log anchor found
-                
-                start_pos = max(0, anchor_pos - 100)  # Start extraction slightly before anchor for context
-                end_search = script_content.find('class="common-entry__content"', anchor_pos + 1)  # Look for next occurrence
-                end_pos = end_search if end_search != -1 else anchor_pos + 50000  # Limit extraction window to 50KB
-                fragment = script_content[start_pos:end_pos]  # Extract HTML fragment containing table
-                
-                verbose_output(f"{BackgroundColors.CYAN}Isolated table fragment ({len(fragment)} chars), parsing...{Style.RESET_ALL}")  # Log fragment size
-                
-                try:  # Parse isolated fragment
-                    fragment_soup = BeautifulSoup(fragment, "html.parser")  # Parse fragment with BeautifulSoup
-                    all_text_nodes = []  # Collect all text nodes from fragment
-                    
-                    for element in fragment_soup.descendants:  # Iterate through all descendant nodes
-                        if isinstance(element, str):  # Check if node is text (NavigableString)
-                            text = element.strip()  # Strip whitespace from text
-                            if text and len(text) > 0:  # Only include non-empty text
-                                all_text_nodes.append(text)  # Add to collection
-                    
-                    verbose_output(f"{BackgroundColors.CYAN}Extracted {len(all_text_nodes)} text nodes from fragment.{Style.RESET_ALL}")  # Log node count
-                    
-                    i = 0  # Initialize index for text node iteration
-                    noise_keywords = ["Classificação", "Itens", "Seguidores", "pago", "seguido", "está navegando", "Vendas", "Avaliações"]  # Noise filters
-                    seen_labels = set()  # Track seen labels to avoid duplicates
-                    
-                    while i < len(all_text_nodes):  # Process text nodes sequentially
-                        current_text = all_text_nodes[i]  # Get current text node
-                        
-                        if any(noise in current_text for noise in noise_keywords):  # Check for noise keywords
-                            i += 1  # Skip noise node
-                            continue
-                        
-                        if ":" in current_text and len(current_text) < 50:  # Likely a label (short text with colon)
-                            label = current_text.replace(":", "").strip()  # Extract label without colon
-                            
-                            if label in seen_labels:  # Check for duplicate label
-                                i += 1  # Skip duplicate
-                                continue
-                            
-                            if len(label) > 2:  # Validate label length
-                                value_parts = []  # Collect value parts
-                                j = i + 1  # Start looking for value in next nodes
-                                
-                                while j < len(all_text_nodes) and j < i + 5:  # Look ahead up to 5 nodes for value
-                                    next_text = all_text_nodes[j]  # Get next text node
-                                    
-                                    if ":" in next_text and len(next_text) < 50:  # Stop if next label found
-                                        break
-                                    
-                                    if len(next_text) > 0 and not any(noise in next_text for noise in noise_keywords):  # Valid value part
-                                        value_parts.append(next_text)  # Add to value parts
-                                        
-                                        if len(" ".join(value_parts)) > 100:  # Stop if value is long enough
-                                            break
-                                    
-                                    j += 1  # Move to next node
-                                
-                                if value_parts:  # If value parts found
-                                    value = " ".join(value_parts).strip()  # Join value parts with space
-                                    
-                                    if len(value) > 0:  # Validate value is not empty
-                                        specifications.append(f"{label}: {value}")  # Append formatted pair
-                                        seen_labels.add(label)  # Mark label as seen
-                                        verbose_output(f"{BackgroundColors.CYAN}Extracted pair: {label}: {value[:50]}...{Style.RESET_ALL}")  # Log extracted pair
-                                        
-                                        if "sku" in label.lower() or "skij" in label.lower():  # Check if SKU reached
-                                            verbose_output(f"{BackgroundColors.GREEN}Reached SKU label, stopping extraction.{Style.RESET_ALL}")  # Log SKU reached
-                                            break  # Stop extraction at SKU
-                                
-                                i = j  # Move index to where value ended
-                            else:
-                                i += 1  # Skip invalid label
-                        else:
-                            i += 1  # Move to next node
-                    
-                    break  # Exit script tag loop after processing first matching script
-                    
-                except Exception as parse_error:  # Catch fragment parsing errors
-                    verbose_output(f"{BackgroundColors.YELLOW}Error parsing fragment: {parse_error}{Style.RESET_ALL}")  # Log parse error
+        container = None  # Placeholder for ProductIntroDescription container if present
+        try:  # Safe attempt to locate the named container in multiple possible forms
+            container = soup.find("div", attrs={"class": "common-entry__container", "name": "ProductIntroDescription"}) or soup.find(attrs={"name": "ProductIntroDescription"})  # Locate by class+name or by name-only
+        except Exception as exc:  # Explicit exception handling (no bare except)
+            verbose_output(f"{BackgroundColors.YELLOW}Error locating ProductIntroDescription container: {exc}{Style.RESET_ALL}")  # Log container lookup error
+            container = None  # Ensure container is None on failure
+
+        container_attributes = {}  # Store attribute key/value pairs extracted from the container
+        container_text = None  # Store container-derived textual description when available
+
+        if container is not None:  # If named container exists, extract attributes + visible text
+            try:  # Guard extraction so failures don't abort other methods
+                for bad in container.find_all(["script", "style"]):  # Remove noisy children that would pollute text
+                    bad.decompose()  # Remove node from parse tree
+
+                for dl in container.find_all("dl"):  # Definition lists (dl -> dt/dd) provide explicit key/value pairs
+                    dts = dl.find_all("dt")  # Potential attribute names
+                    dds = dl.find_all("dd")  # Potential attribute values
+                    for i, dt in enumerate(dts):  # Match dt -> dd by index when possible
+                        dt_text = dt.get_text(" ", strip=True)  # Normalize dt text
+                        dd_text = dds[i].get_text(" ", strip=True) if i < len(dds) else ""  # Safe dd lookup
+                        if dt_text and dd_text and dt_text not in container_attributes:  # Validate and dedupe keys
+                            container_attributes[dt_text] = dd_text  # Preserve original casing for keys
+
+                for table in container.find_all("table"):  # Tables with two-column rows are common attribute containers
+                    for tr in table.find_all("tr"):  # Iterate each table row
+                        cells = tr.find_all(["td", "th"])  # Table cells that may contain key/value
+                        if len(cells) >= 2:  # Need at least two cells for attribute pair
+                            key = cells[0].get_text(" ", strip=True)  # Extract key text
+                            val = cells[1].get_text(" ", strip=True)  # Extract value text
+                            if key and val and key not in container_attributes:  # Validate and avoid duplicates
+                                container_attributes[key] = val  # Store mapping preserving casing
+
+                container_text_fragments = []  # Collect free-form text fragments found inside the container
+                for row in container.find_all(["div", "li", "p", "span"]):  # Iterate common row-like tags
+                    if row is container:  # Defensive: skip if same node encountered
+                        continue  # Skip processing the root container node
+                    label_el = None  # Placeholder for explicit label child element
+                    for candidate in (row.find_all(["b", "strong", "label"], recursive=False) or []):  # Look for direct bold/label children
+                        label_el = candidate  # Accept first direct child that looks like a label
+                        break  # Stop after first candidate
+                    if label_el is not None:  # If an explicit label element was found
+                        lbl_text = label_el.get_text(" ", strip=True)  # Normalize label text
+                        row_text = row.get_text(" ", strip=True)  # Normalize full row text
+                        val_text = row_text.replace(lbl_text, "", 1).strip()  # Derive remaining value text after removing label
+                        if lbl_text and val_text and lbl_text not in container_attributes:  # Validate and dedupe
+                            container_attributes[lbl_text] = val_text  # Store label->value mapping
+                            continue  # Row processed as structured attribute
+                    row_text = row.get_text(" ", strip=True)  # Normalize row text for fallback detection
+                    if ":" in row_text:  # Heuristic: 'Key: Value' textual pattern
+                        parts = row_text.split(":", 1)  # Split into key and value at first colon
+                        key_candidate = parts[0].strip()  # Candidate key text
+                        val_candidate = parts[1].strip()  # Candidate value text
+                        if key_candidate and val_candidate and key_candidate not in container_attributes:  # Validate and dedupe
+                            container_attributes[key_candidate] = val_candidate  # Save detected pair
+                            continue  # Row consumed as structured pair
+                    if row_text:  # If not structured, collect as free-form fragment
+                        container_text_fragments.append(row_text)  # Append visible text fragment for later joining
+
+                for t in container.find_all(["p", "span", "li"]):  # Also include top-level paragraphs/spans inside container
+                    txt = t.get_text(" ", strip=True)  # Normalize tag text
+                    if txt:  # Only include non-empty fragments
+                        container_text_fragments.append(txt)  # Append fragment to container fragment list
+
+                seen_frag = {}  # Ordered dedupe helper for container fragments
+                for frag in container_text_fragments:  # Iterate in discovered order
+                    if frag not in seen_frag:  # Only keep first occurrence
+                        seen_frag[frag] = True  # Mark fragment as seen
+                container_text = "\n\n".join(seen_frag.keys()).strip() or None  # Build final container textual block
+                if container_text:  # Only append non-empty container text to aggregate
+                    combined_fragments.append(container_text)  # Add container text to master fragments list
+            except Exception as exc:  # Handle extraction errors explicitly
+                verbose_output(f"{BackgroundColors.YELLOW}Error extracting ProductIntroDescription: {exc}{Style.RESET_ALL}")  # Log and continue without failing
+
+        try:  # Structured specification extraction from inline script fragments
+            specifications = []  # Collect label:value strings found in script fragments
+            script_tags = soup.find_all("script")  # Search all script tags in the document
+            verbose_output(f"{BackgroundColors.CYAN}Searching through {len(script_tags)} script tags for specification table...{Style.RESET_ALL}")  # Diagnostic log
+            for script_tag in script_tags:  # Iterate script tags to search for common-entry__content anchor
+                if not script_tag.string:  # Skip empty or non-text script tags
+                    continue  # Move to next script tag
+                script_content = str(script_tag.string)  # Convert content to string for searching
+                anchor_pos = script_content.find('class="common-entry__content"')  # Anchor indicating structured spec HTML
+                if anchor_pos == -1:  # Continue if anchor not present in this tag
                     continue  # Try next script tag
-            
-            if len(specifications) >= 3:  # Require at least 3 pairs to accept
-                description = "\n".join(specifications)  # Join pairs with newline
-                description = self.to_sentence_case(description)  # Convert structured specification description to sentence case
-                verbose_output(f"{BackgroundColors.GREEN}Structured specifications extracted successfully ({len(specifications)} pairs, {len(description)} characters).{Style.RESET_ALL}")  # Log success with counts
-                return description  # Return formatted structured description
-            else:
-                verbose_output(f"{BackgroundColors.YELLOW}Found only {len(specifications)} specifications, need at least 3. Continuing to JSON extraction...{Style.RESET_ALL}")  # Not enough pairs
-                
-        except Exception as e:  # Catch and log extraction errors
-            verbose_output(f"{BackgroundColors.YELLOW}Error extracting structured specifications: {e}{Style.RESET_ALL}")  # Log exception
+                start_pos = max(0, anchor_pos - 100)  # Start a bit before anchor for context
+                end_search = script_content.find('class="common-entry__content"', anchor_pos + 1)  # Find next occurrence if any
+                end_pos = end_search if end_search != -1 else anchor_pos + 50000  # Bound extraction window to 50KB
+                fragment = script_content[start_pos:end_pos]  # Slice fragment expected to contain HTML
+                try:  # Parse isolated fragment safely
+                    fragment_soup = BeautifulSoup(fragment, "html.parser")  # Parse fragment HTML
+                    all_text_nodes = []  # Collect visible text nodes from fragment
+                    for element in fragment_soup.descendants:  # Iterate descendant nodes to collect text
+                        if isinstance(element, str):  # Consider only string nodes
+                            text = element.strip()  # Trim whitespace
+                            if text:  # Skip empty strings
+                                all_text_nodes.append(text)  # Append meaningful text node
+                    noise_keywords = ["Classificação", "Itens", "Seguidores", "pago", "seguido", "está navegando", "Vendas", "Avaliações"]  # Known noisy tokens
+                    i = 0  # Index for sequential scan of text nodes
+                    seen_labels = set()  # Track labels already consumed to avoid duplicates
+                    while i < len(all_text_nodes):  # Scan through text nodes with lookahead
+                        current_text = all_text_nodes[i]  # Current text node under inspection
+                        if any(noise in current_text for noise in noise_keywords):  # Skip noisy nodes quickly
+                            i += 1  # Advance index past noise
+                            continue  # Continue scanning
+                        if ":" in current_text and len(current_text) < 50:  # Likely a short label followed by value nodes
+                            label = current_text.replace(":", "").strip()  # Normalize potential label
+                            if label in seen_labels:  # Avoid duplicate labels
+                                i += 1  # Advance index and skip
+                                continue  # Continue scanning
+                            if len(label) > 2:  # Require minimal label length for quality
+                                value_parts = []  # Accumulate adjacent nodes that look like the value
+                                j = i + 1  # Lookahead pointer
+                                while j < len(all_text_nodes) and j < i + 5:  # Limit lookahead to a few nodes
+                                    next_text = all_text_nodes[j]  # Candidate value part
+                                    if ":" in next_text and len(next_text) < 50:  # Stop when next label is found
+                                        break  # End lookahead for this label
+                                    if next_text and not any(noise in next_text for noise in noise_keywords):  # Accept valid value parts
+                                        value_parts.append(next_text)  # Collect part of value
+                                        if len(" ".join(value_parts)) > 100:  # Prevent unbounded accumulation
+                                            break  # Enough value text collected
+                                    j += 1  # Advance lookahead index
+                                if value_parts:  # Only accept label when a value was found
+                                    specifications.append(f"{label}: {' '.join(value_parts)}")  # Store formatted pair
+                                    seen_labels.add(label)  # Mark label as consumed
+                                    i = j  # Advance main index past consumed value parts
+                                    continue  # Continue scanning main loop
+                        i += 1  # Advance index when no structured pair found
+                    if specifications:  # If any structured specs were discovered
+                        spec_text = "\n".join(specifications)  # Join into a block of text
+                        combined_fragments.append(spec_text)  # Aggregate into master fragments list
+                    break  # Stop after first matching script fragment
+                except Exception as parse_error:  # Handle fragment parse errors explicitly
+                    verbose_output(f"{BackgroundColors.YELLOW}Error parsing fragment: {parse_error}{Style.RESET_ALL}")  # Log parse failure and continue
+                    continue  # Try next script tag
+        except Exception as exc:  # Catch outer failures for structured extraction
+            verbose_output(f"{BackgroundColors.YELLOW}Error extracting structured specifications: {exc}{Style.RESET_ALL}")  # Log and continue
 
-        verbose_output(f"{BackgroundColors.YELLOW}Structured specification extraction failed, trying goods_desc JSON extraction...{Style.RESET_ALL}")  # Proceed to goods_desc fallback
+        try:  # Goods_desc JSON extraction (aggregate text if present)
+            script_tags = soup.find_all("script")  # Reuse script tag list for JSON scanning
+            for script_tag in script_tags:  # Iterate all script tags
+                if not script_tag.string:  # Skip empty script nodes
+                    continue  # Continue to next script tag
+                script_content = str(script_tag.string)  # Convert content to string for searching
+                if '"goods_desc"' in script_content or "'goods_desc'" in script_content:  # Quick existence check
+                    try:  # Attempt to parse JSON and extract goods_desc safely
+                        json_obj = json.loads(script_content)  # Parse JSON content from script tag
+                        def _find_goods_desc(obj):  # Recursive helper to locate goods_desc field
+                            if isinstance(obj, dict):  # Dict nodes may contain the key
+                                if "goods_desc" in obj and isinstance(obj["goods_desc"], str):  # Direct match
+                                    return obj["goods_desc"]  # Return found string
+                                for v in obj.values():  # Recurse into values
+                                    res = _find_goods_desc(v)  # Recursive search
+                                    if res:  # If found, bubble up
+                                        return res  # Return found value
+                            elif isinstance(obj, list):  # Recurse into list items
+                                for item in obj:  # Iterate list items
+                                    res = _find_goods_desc(item)  # Recursive search in item
+                                    if res:  # If found, return
+                                        return res  # Bubble up found value
+                            return None  # Not found in this branch
+                        goods_desc_val = _find_goods_desc(json_obj)  # Run recursive search on parsed JSON
+                        if goods_desc_val and isinstance(goods_desc_val, str):  # Validate returned value
+                            cleaned = re.sub(r"<[^>]+>", "", goods_desc_val).strip()  # Strip HTML tags from goods_desc
+                            if cleaned:  # If non-empty after cleaning
+                                combined_fragments.append(cleaned)  # Aggregate goods_desc textual content
+                    except (json.JSONDecodeError, TypeError) as jex:  # Handle JSON parsing/type errors explicitly
+                        continue  # Skip this script tag on parse failure
+        except Exception as exc:  # Catch-all for goods_desc scanning
+            verbose_output(f"{BackgroundColors.YELLOW}Error extracting goods_desc: {exc}{Style.RESET_ALL}")  # Log and continue
 
-        try:  # Attempt goods_desc JSON extraction from script tags
-            script_tags = soup.find_all("script")  # Find all script tags in document
-            verbose_output(f"{BackgroundColors.CYAN}Searching through {len(script_tags)} script tags for goods_desc field...{Style.RESET_ALL}")  # Log search start
-            
-            for script_tag in script_tags:  # Iterate through each script tag
-                if not script_tag.string:  # Skip script tags with no content
-                    continue
-                
-                script_content = str(script_tag.string)  # Convert script content to string
-                
-                if '"goods_desc"' in script_content or "'goods_desc'" in script_content:  # Check if goods_desc field exists
-                    verbose_output(f"{BackgroundColors.GREEN}Found goods_desc field in script tag, parsing JSON...{Style.RESET_ALL}")  # Log field found
-                    
-                    try:  # Parse JSON data
-                        json_data = json.loads(script_content)  # Parse script content as JSON
-                        
-                        if isinstance(json_data, dict) and "goods_desc" in json_data:  # Check if goods_desc exists in parsed data
-                            goods_desc = json_data["goods_desc"]  # Extract goods_desc value
-                            goods_desc = self.to_sentence_case(goods_desc)  # Convert goods_desc to sentence case
-                            if goods_desc and len(goods_desc) > 10:  # Validate description length
-                                verbose_output(f"{BackgroundColors.GREEN}goods_desc extracted successfully ({len(goods_desc)} chars).{Style.RESET_ALL}")  # Log success
-                                return goods_desc  # Return formatted goods_desc content
-                        
-                    except json.JSONDecodeError:  # Handle JSON parsing errors
-                        verbose_output(f"{BackgroundColors.YELLOW}Failed to parse JSON in script tag.{Style.RESET_ALL}")  # Log parse failure
-                        continue  # Try next script tag
-                    except Exception as parse_error:  # Handle other parsing errors
-                        verbose_output(f"{BackgroundColors.YELLOW}Error parsing goods_desc: {parse_error}{Style.RESET_ALL}")  # Log error
-                        continue  # Try next script tag
-            
-            verbose_output(f"{BackgroundColors.YELLOW}goods_desc field not found or invalid.{Style.RESET_ALL}")  # Log failure
-                
-        except Exception as e:  # Catch and log extraction errors
-            verbose_output(f"{BackgroundColors.YELLOW}Error extracting goods_desc: {e}{Style.RESET_ALL}")  # Log exception
+        dedupe = {}  # Ordered dedupe using dict insertion order
+        for frag in combined_fragments:  # Iterate fragments in discovery order
+            if frag and frag not in dedupe:  # Only include non-empty, unseen fragments
+                dedupe[frag] = True  # Mark as seen
+        combined_text = "\n\n".join(dedupe.keys()).strip()  # Join fragments with paragraph spacing
 
-        verbose_output(f"{BackgroundColors.YELLOW}All description extraction methods failed.{Style.RESET_ALL}")  # Log complete failure
+        if not combined_text:  # If no description fragments were gathered
+            return "No description available"  # Maintain existing fallback
 
-        return "No description available"  # Return default when no description found
+        if container_attributes:  # If we extracted structured attributes from ProductIntroDescription
+            return {"text": combined_text, "attributes": container_attributes}  # Return structured result (backward-compatible addition)
+
+        return combined_text  # Return legacy string when no structured attributes present
 
 
     def detect_international(self, soup=None) -> bool:
@@ -1127,9 +1166,15 @@ class Shein:
             current_price_int, current_price_dec = self.extract_current_price(soup)  # Extract current price integer and decimal parts
             discount_percentage = self.extract_discount_percentage(soup)  # Extract discount percentage value
             old_price_int, old_price_dec = self.extract_old_price(soup, current_price_int, current_price_dec, discount_percentage)  # Extract old price with computational fallback
-            description = self.extract_product_description(soup)  # Extract product description text
-            is_international = self.detect_international(soup)  # Detect if product has only international shipping
-            self.product_data = {"name": product_name, "current_price_integer": current_price_int, "current_price_decimal": current_price_dec, "old_price_integer": old_price_int, "old_price_decimal": old_price_dec, "discount_percentage": discount_percentage, "description": description, "url": self.product_url, "is_international": is_international}  # Store all extracted data in dictionary
+            raw_description = self.extract_product_description(soup)  # Extract product description (may be str or structured dict)  
+            if isinstance(raw_description, dict):  # If structured object returned by extractor  
+                description_text = raw_description.get("text", "No description available")  # Extract textual part safely  
+                description_structured = {"text": raw_description.get("text", ""), "attributes": raw_description.get("attributes", {})}  # Normalize structured dict for product_data  
+            else:  # Fallback when extractor returned legacy string  
+                description_text = raw_description or "No description available"  # Ensure non-empty string  
+                description_structured = {"text": description_text, "attributes": {}}  # Empty attributes to preserve schema  
+            is_international = self.detect_international(soup)  # Detect if product has only international shipping  
+            self.product_data = {"name": product_name, "current_price_integer": current_price_int, "current_price_decimal": current_price_dec, "old_price_integer": old_price_int, "old_price_decimal": old_price_dec, "discount_percentage": discount_percentage, "description": description_text, "description_structured": description_structured, "url": self.product_url, "is_international": is_international}  # Store all extracted data in dictionary
             self.print_product_info(self.product_data)  # Display extracted product information to user
             return self.product_data  # Return complete product data dictionary
         except Exception as e:  # Catch any exceptions during parsing
