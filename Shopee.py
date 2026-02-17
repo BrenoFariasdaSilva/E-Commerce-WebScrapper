@@ -481,7 +481,7 @@ class Shopee:
             name_element = soup.find(tag, attrs if attrs else None)  # type: ignore[arg-type]  # Search for element matching current selector
             if name_element:  # Verify if matching element was found
                     raw_product_name = name_element.get_text(separator=" ", strip=True)  # Extract raw text, preserve single spaces between parts
-                    product_name = normalize_product_dir_name(raw_product_name, replace_with="_", title_case=True)  # Normalize name for directory usage
+                    product_name = normalize_product_dir_name(raw_name=raw_product_name)  # Normalize name for directory usage
                     if product_name and product_name != "":  # Validate that extracted name is not empty
                         verbose_output(  # Log successfully extracted product name
                             f"{BackgroundColors.GREEN}Product name: {BackgroundColors.CYAN}{product_name}{Style.RESET_ALL}"
