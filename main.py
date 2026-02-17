@@ -741,6 +741,8 @@ def verify_affiliate_url_format(url):
         return True  # Consider as acceptable (no affiliate check required)
     
     platform_modules = {  # Mapping of platform ids to scraper modules
+        "aliexpress": AliExpress,  # AliExpress module
+        "amazon": Amazon,  # Amazon module
         "mercadolivre": MercadoLivre,  # MercadoLivre module
         "shein": Shein,  # Shein module
         "shopee": Shopee,  # Shopee module
