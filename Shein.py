@@ -1237,44 +1237,68 @@ class Shein:
             return None  # Return None to indicate save operation failed
 
 
-    def create_product_description_file(self, product_data=None, output_dir="", product_name_safe="", url=""):
+    def create_product_description_file(self, product_data, output_dir, product_name_safe, url):
         """
         Creates a text file with product description and details.
-
+        
         :param product_data: Dictionary with product information
         :param output_dir: Directory to save the file
         :param product_name_safe: Safe product name for filename
         :param url: Original product URL
         :return: Path to the created description file or None if failed
         """
+        
+        try:  # Try to create the .txt file
+            product_name = product_data.get("name", "Produto")  # Get product name
+            if isinstance(product_name, str):
+                product_name = product_name.title()
 
-        if product_data is None:  # Verify if product_data parameter was not provided
-            product_data = {}  # Initialize empty dictionary as default
-        try:  # Attempt to create description file with error handling
-            description_file_path = os.path.join(output_dir, f"{product_name_safe}_description.txt")  # Construct path for description text file
-            current_price = f"{product_data.get('current_price_integer', '0')},{product_data.get('current_price_decimal', '00')}"  # Format current price from dictionary values
-            old_price_int = product_data.get('old_price_integer', 'N/A')  # Get old price integer part or default
-            old_price_dec = product_data.get('old_price_decimal', 'N/A')  # Get old price decimal part or default
-            if old_price_int != 'N/A' and old_price_dec != 'N/A':  # Verify if old price components are available
-                old_price = f"{old_price_int},{old_price_dec}"  # Format old price from components
-            else:  # Handle case when old price is not available
-                old_price = "N/A"  # Use N/A as old price placeholder
-            discount = product_data.get('discount_percentage', 'N/A')  # Get discount percentage or default
-
-            description_text = product_data.get('description', 'No description available')  # Get product description or default message
-            try:  # Attempt to convert description to sentence case with error handling
-                description_text = self.to_sentence_case(description_text)  # Convert description text to sentence case for improved readability
-            except Exception:  # Catch any exceptions during sentence case conversion but continue with original description
-                pass  # If conversion fails, use original description without modification
-
-            content = PRODUCT_DESCRIPTION_TEMPLATE.format(product_name=product_data.get('name', 'Unknown Product'), current_price=current_price, old_price=old_price, discount=discount, description=description_text, url=url)  # Format template with product data
-            with open(description_file_path, "w", encoding="utf-8") as f:  # Open file in write mode with UTF-8 encoding
-                f.write(content)  # Write formatted content to file
-            verbose_output(f"{BackgroundColors.GREEN}Description file created: {description_file_path}{Style.RESET_ALL}")
-            return description_file_path  # Return path to created description file
-        except Exception as e:  # Catch any exceptions during file creation
-            print(f"{BackgroundColors.RED}Failed to create description file: {e}{Style.RESET_ALL}")  # Alert user about file creation failure
-            return None  # Return None to indicate creation failed
+            if isinstance(product_name, str) and product_name.strip().lower() == "unknown product":  # If product name is "Unknown Product", don't create file
+                verbose_output(
+                    f"{BackgroundColors.YELLOW}Skipping description file creation for Unknown Product.{Style.RESET_ALL}"
+                )
+                return None  # Return None
+            
+            description = product_data.get("description", "")  # Get description
+            if description:  # If description exists
+                description = self.clean_description(description)  # Clean description
+                description = self.to_sentence_case(description)  # Convert to sentence case
+            
+            old_price_int = product_data.get("old_price_integer", "0")  # Get old price integer
+            old_price_dec = product_data.get("old_price_decimal", "00")  # Get old price decimal
+            current_price_int = product_data.get("current_price_integer", "0")  # Get current price integer
+            current_price_dec = product_data.get("current_price_decimal", "00")  # Get current price decimal
+            discount = product_data.get("discount_percentage", "N/A")  # Get discount percentage
+            
+            old_price = f"{old_price_int},{old_price_dec}" if old_price_int != "N/A" else "N/A"  # Format old price
+            current_price = f"{current_price_int},{current_price_dec}"  # Format current price
+            
+            template_content = PRODUCT_DESCRIPTION_TEMPLATE.format(
+                product_name=product_name,
+                current_price=current_price,
+                old_price=old_price,
+                discount=discount,
+                description=description,
+                url=url
+            )  # Format the template with product data
+            
+            txt_filename = f"{product_name_safe}_description.txt"  # Create .txt filename
+            txt_filepath = os.path.join(output_dir, txt_filename)  # Create .txt file path
+            
+            with open(txt_filepath, "w", encoding="utf-8") as f:  # Write file with UTF-8 encoding
+                f.write(template_content)  # Write content
+            
+            verbose_output(
+                f"{BackgroundColors.GREEN}✓ Created product description file: {BackgroundColors.CYAN}{txt_filename}{Style.RESET_ALL}"
+            )  # Output success
+            
+            return txt_filepath  # Return the file path
+            
+        except Exception as e:  # If error creating .txt file
+            print(
+                f"{BackgroundColors.YELLOW}Warning: Could not create product description file: {e}{Style.RESET_ALL}"
+            )  # Output warning
+            return None  # Return None on failure
 
 
     def clean_description(self, text):
