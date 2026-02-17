@@ -95,7 +95,13 @@ class BackgroundColors:  # Colors for the terminal
 VERBOSE = False  # Set to True to output verbose messages
 
 # Affiliate URL detection pattern (short AliExpress redirect links)  # keep generic pattern for now
-AFFILIATE_URL_PATTERN = r"https?://s\.AliExpress\.com(?:\.br)?/[A-Za-z0-9]+"  # Keep existing affiliate pattern as fallback
+AFFILIATE_URL_PATTERN = (
+    r"https?://("
+    r"s\.click\.aliexpress\.com/e/[A-Za-z0-9_]+"
+    r"|"
+    r"(?:www\.)?aliexpress\.[a-z.]+/.*[?&](?:aff_fcid|aff_fsk|aff_trace_key|aff_platform|dp|terminal_id|af)="
+    r")"
+)  # Keep existing affiliate pattern as fallback
 
 # HTML Selectors Dictionary:
 HTML_SELECTORS = {
